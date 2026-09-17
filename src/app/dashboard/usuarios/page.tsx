@@ -12,20 +12,20 @@ export default async function UsuariosPage() {
 
   if (!user) redirect('/login')
 
-  const { data: perfil } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (perfil?.role !== 'admin') redirect('/dashboard')
-
   // Lista pelo cliente admin: o RLS esconderia os demais perfis.
   const admin = createAdminClient()
-  const { data: usuarios } = await admin
-    .from('profiles')
-    .select('id, email, full_name, role, created_at')
-    .order('created_at', { ascending: false })
+
+  // As duas consultas nao dependem uma da outra: rodam juntas para nao
+  // somar a latencia de ida e volta ao banco.
+  const [{ data: perfil }, { data: usuarios }] = await Promise.all([
+    supabase.from('profiles').select('role').eq('id', user.id).single(),
+    admin
+      .from('profiles')
+      .select('id, email, full_name, role, created_at')
+      .order('created_at', { ascending: false }),
+  ])
+
+  if (perfil?.role !== 'admin') redirect('/dashboard')
 
   return (
     <div className="space-y-8">

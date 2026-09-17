@@ -1,39 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useAnimatedNumber } from '@/lib/use-animated-number'
 import { Label } from "@/components/ui/label"
 import { TrendingUp, Target, Filter, Wallet, HeartHandshake, CheckCircle2, Circle } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-// Hook animado para números
-function useAnimatedNumber(end: number, duration: number = 800) {
-  const [count, setCount] = useState(end)
-
-  useEffect(() => {
-    let startTime: number | null = null
-    let animationFrame: number
-    const startValue = count
-
-    const step = (timestamp: number) => {
-      if (!startTime) startTime = timestamp
-      const progress = Math.min((timestamp - startTime) / duration, 1)
-      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress)
-      
-      setCount(startValue + (end - startValue) * easeProgress)
-
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(step)
-      } else {
-        setCount(end)
-      }
-    }
-
-    animationFrame = requestAnimationFrame(step)
-    return () => cancelAnimationFrame(animationFrame)
-  }, [end, duration, count])
-
-  return Math.floor(count)
-}
 
 function AnimatedValue({ value, isCurrency = false }: { value: number, isCurrency?: boolean }) {
   const count = useAnimatedNumber(value)

@@ -1,38 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAnimatedNumber } from '@/lib/use-animated-number'
 import { AlertCircle, Target, TrendingUp, Settings2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-
-function useAnimatedNumber(end: number, duration: number = 800) {
-  const [count, setCount] = useState(end)
-
-  useEffect(() => {
-    let startTime: number | null = null
-    let animationFrame: number
-    const startValue = count
-
-    const step = (timestamp: number) => {
-      if (!startTime) startTime = timestamp
-      const progress = Math.min((timestamp - startTime) / duration, 1)
-      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress)
-      
-      setCount(startValue + (end - startValue) * easeProgress)
-
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(step)
-      } else {
-        setCount(end)
-      }
-    }
-
-    animationFrame = requestAnimationFrame(step)
-    return () => cancelAnimationFrame(animationFrame)
-  }, [end, duration, count])
-
-  return Math.floor(count)
-}
 
 function formatCurrency(val: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val)
