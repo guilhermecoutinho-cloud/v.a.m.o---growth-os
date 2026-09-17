@@ -50,3 +50,6 @@ supabase/migrations/20260917000000_fix_trigger_and_lock_signup.sql
 
 # O exemplo nao tem segredo: e o modelo do .env.local
 !.env.example
+
+# Copias de trabalho da logo; a fonte fica em id/
+public/logo-vamo.*

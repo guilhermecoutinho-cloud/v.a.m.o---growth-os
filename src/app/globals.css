@@ -131,3 +131,85 @@
     @apply font-heading;
   }
 }
+/* ==========================================================
+   Animacoes da tela de login
+   ----------------------------------------------------------
+   Todas animam apenas transform e opacity: a GPU cuida delas
+   sem repintar a tela a cada quadro, entao o custo e proximo
+   de zero mesmo em maquina fraca. Nada de JavaScript.
+   ========================================================== */
+
+/* Auroras que respiram ao fundo */
+@keyframes aurora-deriva {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(6%, -4%, 0) scale(1.12); }
+  66%      { transform: translate3d(-5%, 5%, 0) scale(0.94); }
+}
+
+/* Entrada dos elementos, de baixo para cima */
+@keyframes surgir {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+.aurora {
+  animation: aurora-deriva 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+.surgir {
+  animation: surgir 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Quem prefere menos movimento nao ve nenhum. */
+@media (prefers-reduced-motion: reduce) {
+  .aurora,
+  .surgir {
+    animation: none;
+  }
+  .surgir { opacity: 1; transform: none; }
+}
+
+/* ==========================================================
+   Minha Jornada
+   ---------------------------------------------------------- */
+
+/* Pulso do marcador "voce esta aqui" */
+@keyframes pulso-atual {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(0 214 143 / 0.5); }
+  70%      { box-shadow: 0 0 0 10px rgb(0 214 143 / 0); }
+}
+
+/* Risco de luz que percorre a barra de progresso */
+@keyframes brilho-barra {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(300%); }
+}
+
+/* Marca de confirmacao ao concluir */
+@keyframes selo-ok {
+  0%   { transform: scale(0.4); opacity: 0; }
+  60%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.pulso-atual  { animation: pulso-atual 2.4s ease-out infinite; }
+.selo-ok      { animation: selo-ok 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+.barra-progresso { position: relative; overflow: hidden; }
+.barra-progresso::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 33%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+  animation: brilho-barra 2.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulso-atual,
+  .selo-ok,
+  .barra-progresso::after {
+    animation: none;
+  }
+}
