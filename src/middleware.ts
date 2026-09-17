@@ -6,9 +6,25 @@ export async function middleware(request: NextRequest) {
     request,
   })
 
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  // Sem as variaveis, createServerClient lanca excecao. Como o matcher
+  // cobre o site inteiro, isso derrubaria todas as rotas com
+  // MIDDLEWARE_INVOCATION_FAILED em vez de mostrar qualquer pagina.
+  // Melhor deixar passar: as paginas protegidas ainda checam a sessao
+  // no servidor, e o erro fica legivel nos logs.
+  if (!url || !anonKey) {
+    console.error(
+      '[middleware] Supabase nao configurado: defina NEXT_PUBLIC_SUPABASE_URL ' +
+        'e NEXT_PUBLIC_SUPABASE_ANON_KEY nas variaveis de ambiente.'
+    )
+    return supabaseResponse
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    anonKey,
     {
       cookies: {
         getAll() {
@@ -27,26 +43,32 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Uma falha de rede aqui nao pode derrubar o site inteiro: sem usuario,
+  // a rota protegida manda para o login, que e o comportamento seguro.
+  let user = null
+  try {
+    const { data } = await supabase.auth.getUser()
+    user = data.user
+  } catch (erro) {
+    console.error('[middleware] Falha ao consultar a sessao:', erro)
+  }
 
   // Protect private routes
-  const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard') || 
+  const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard') ||
                            request.nextUrl.pathname.startsWith('/sales') ||
                            request.nextUrl.pathname.startsWith('/onboarding')
 
   if (!user && isProtectedRoute) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
+    const destino = request.nextUrl.clone()
+    destino.pathname = '/login'
+    return NextResponse.redirect(destino)
   }
 
   // Redirect to dashboard if logged in and trying to access login
   if (user && request.nextUrl.pathname.startsWith('/login')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
+    const destino = request.nextUrl.clone()
+    destino.pathname = '/dashboard'
+    return NextResponse.redirect(destino)
   }
 
   return supabaseResponse
