@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# V.A.M.O. — Growth OS
 
-## Getting Started
+Área de membros com acesso liberado manualmente após a compra.
+Next.js 16 + Supabase (Auth e Postgres com RLS).
 
-First, run the development server:
+## Como o acesso funciona
+
+Não existe cadastro aberto para o comprador. O fluxo é:
+
+1. A venda acontece.
+2. Um administrador entra em `/dashboard/usuarios`, digita o e-mail e a senha
+   e clica em **Criar acesso**.
+3. O botão **Copiar mensagem pronta** monta o texto com e-mail, senha e link.
+4. O comprador entra direto em `/login` — a conta já nasce confirmada, sem
+   e-mail de verificação.
+
+Se o comprador esquecer a senha, o admin gera outra em **Nova senha** e
+reenvia. Não há recuperação por e-mail.
+
+## Papéis
+
+| Papel | Acesso |
+|---|---|
+| `admin` | Tudo, incluindo criar e revogar acessos |
+| `mentor` | Dashboard |
+| `sales` | Dashboard e diagnósticos |
+| `student` | Dashboard (padrão de quem compra) |
+
+Um usuário não consegue mudar o próprio papel: um trigger no banco bloqueia,
+e o papel vem de `app_metadata`, que só o servidor escreve.
+
+## Rodando localmente
 
 ```bash
+npm install
+cp .env.example .env.local   # preencha com as chaves do seu Supabase
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+O `.env.local` precisa estar em **UTF-8**. No PowerShell, use
+`-Encoding utf8` ao criá-lo — um arquivo em UTF-16 faz o Next.js ler os nomes
+das variáveis com lixo e a conexão falha sem erro claro.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Banco de dados
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Aplique as migrations de `supabase/migrations/` em ordem, pelo SQL Editor do
+Supabase. Elas criam as tabelas, ligam o RLS e definem o trigger que cria o
+perfil de cada usuário novo.
 
-## Learn More
+Em **Authentication → Providers → Email**, deixe *Confirm email* desligado:
+as contas são criadas já confirmadas pelo painel de admin, e o comprador não
+recebe e-mail nenhum.
 
-To learn more about Next.js, take a look at the following resources:
+## Deploy na Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Importe o repositório e defina as três variáveis de ambiente em
+**Settings → Environment Variables** (os mesmos nomes do `.env.example`).
+A `SUPABASE_SERVICE_ROLE_KEY` é secreta: sem ela a tela de acessos não
+funciona, e exposta ela dá controle total do banco.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Depois do primeiro deploy, adicione a URL do site em
+**Supabase → Authentication → URL Configuration → Site URL**.
 
-## Deploy on Vercel
+## Estrutura
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+  app/
+    login/                    entrada (sem cadastro público)
+    dashboard/
+      usuarios/               painel de acessos — somente admin
+  lib/supabase/
+    client.ts                 browser
+    server.ts                 server components e actions
+    admin.ts                  service_role — nunca no browser
+  middleware.ts               protege /dashboard, /sales, /onboarding
+supabase/migrations/          schema, RLS e triggers
+```

@@ -28,8 +28,8 @@ export default async function LoginPage({
               <Input
                 id="email"
                 name="email"
-                type="text"
-                placeholder="seunome@empresa.com.br ou admin"
+                type="email"
+                placeholder="seunome@empresa.com.br"
                 required
                 className="bg-input text-foreground"
               />
@@ -37,9 +37,9 @@ export default async function LoginPage({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="text-foreground">Senha</Label>
-                <a href="#" className="text-sm font-medium text-primary hover:underline">
-                  Esqueci minha senha
-                </a>
+                <span className="text-sm text-muted-foreground">
+                  Esqueceu? Fale com o suporte.
+                </span>
               </div>
               <Input
                 id="password"

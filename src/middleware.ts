@@ -36,12 +36,11 @@ export async function middleware(request: NextRequest) {
                            request.nextUrl.pathname.startsWith('/sales') ||
                            request.nextUrl.pathname.startsWith('/onboarding')
 
-  // Temporariamente desativado para evitar bloqueio de Rate Limit
-  // if (!user && isProtectedRoute) {
-  //   const url = request.nextUrl.clone()
-  //   url.pathname = '/login'
-  //   return NextResponse.redirect(url)
-  // }
+  if (!user && isProtectedRoute) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
 
   // Redirect to dashboard if logged in and trying to access login
   if (user && request.nextUrl.pathname.startsWith('/login')) {

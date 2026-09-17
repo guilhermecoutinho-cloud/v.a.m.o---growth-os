@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Scripts locais que nao pertencem ao repositorio
+# fix_trigger.sql reintroduz a falha de permissao se executado
+fix_trigger.sql
+test_supabase.js
+
+# Rascunho substituido por 20260917000000_fix_trigger_and_admin_policies.sql
+supabase/migrations/20260917000000_fix_trigger_and_lock_signup.sql
+
+# O exemplo nao tem segredo: e o modelo do .env.local
+!.env.example

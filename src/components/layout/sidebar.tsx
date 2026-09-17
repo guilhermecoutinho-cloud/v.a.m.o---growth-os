@@ -18,11 +18,19 @@ import {
   User,
   Settings,
   Filter,
+  Users,
   LogOut
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { logout } from '@/app/login/actions'
 
-export function Sidebar() {
+export function Sidebar({
+  email,
+  role,
+}: {
+  email?: string
+  role?: string
+}) {
   const pathname = usePathname()
 
   const isActive = (path: string) => pathname === path
@@ -138,21 +146,56 @@ export function Sidebar() {
               </div>
             </div>
           </div>
+
+          {/* ADMINISTRAÇÃO — só para admin */}
+          {role === 'admin' && (
+            <div>
+              <h4 className="mb-3 px-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                Administração
+              </h4>
+              <div className="space-y-1">
+                <Link
+                  href="/dashboard/usuarios"
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 group relative",
+                    isActive('/dashboard/usuarios')
+                      ? "text-primary bg-primary/10 shadow-[inset_0_0_0_1px_rgba(72,209,122,0.2)]"
+                      : "text-muted-foreground hover:text-white hover:bg-white/5"
+                  )}
+                >
+                  {isActive('/dashboard/usuarios') && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full shadow-[0_0_10px_rgba(72,209,122,0.8)]"></div>
+                  )}
+                  <Users className={cn("h-4 w-4 transition-colors", isActive('/dashboard/usuarios') ? "text-primary" : "group-hover:text-white")} />
+                  Acessos
+                </Link>
+              </div>
+            </div>
+          )}
         </nav>
       </div>
 
       {/* FOOTER DO SIDEBAR */}
       <div className="border-t border-border/50 p-4 bg-background/50 relative z-10">
-        <div className="flex items-center gap-3 rounded-lg p-2 hover:bg-white/5 transition-colors cursor-pointer group">
+        <form action={logout} className="flex items-center gap-3 rounded-lg p-2 hover:bg-white/5 transition-colors group">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/20 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
             <User className="h-4 w-4" />
           </div>
-          <div className="flex flex-col flex-1">
-            <span className="text-sm font-semibold text-white">Usuário</span>
-            <span className="text-xs text-muted-foreground">Admin</span>
+          <div className="flex flex-col flex-1 min-w-0">
+            <span className="truncate text-sm font-semibold text-white">
+              {email ?? 'Usuário'}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {role === 'admin' ? 'Administrador'
+                : role === 'mentor' ? 'Mentor'
+                : role === 'sales' ? 'Comercial'
+                : 'Aluno'}
+            </span>
           </div>
-          <LogOut className="h-4 w-4 text-muted-foreground group-hover:text-destructive transition-colors" />
-        </div>
+          <button type="submit" title="Sair" className="shrink-0">
+            <LogOut className="h-4 w-4 text-muted-foreground group-hover:text-destructive transition-colors" />
+          </button>
+        </form>
       </div>
     </div>
   )

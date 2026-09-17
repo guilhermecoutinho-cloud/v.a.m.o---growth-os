@@ -6,6 +6,10 @@ import { DollarSign, Target, TrendingDown, Activity, ArrowRight } from "lucide-r
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { Button } from "@/components/ui/button"
 
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+
 const chartData = [
   { name: "Jan", receita: 120000 },
   { name: "Fev", receita: 180000 },
@@ -38,10 +42,52 @@ export default function DashboardPage() {
           <h2 className="text-4xl font-extrabold tracking-tight text-white">Sua Máquina de Crescimento</h2>
           <p className="text-muted-foreground mt-2 text-lg">Antes de tentar crescer, precisamos entender como sua empresa cresce hoje.</p>
         </div>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-[0_0_15px_rgba(72,209,122,0.3)] transition-all">
-          <Activity className="mr-2 h-4 w-4" />
-          Novo Diagnóstico
-        </Button>
+        
+        <Dialog>
+          <DialogTrigger
+            render={
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-[0_0_15px_rgba(72,209,122,0.3)] transition-all" />
+            }
+          >
+            <Activity className="mr-2 h-4 w-4" />
+            Novo Diagnóstico
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[450px] bg-card border-border/50 text-white shadow-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl">Iniciar Novo Diagnóstico</DialogTitle>
+              <DialogDescription className="text-muted-foreground mt-2">
+                Vamos identificar os maiores gargalos da sua máquina. Preencha os dados básicos para a IA iniciar a análise.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-5 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="url">Site ou Landing Page da sua empresa</Label>
+                <Input id="url" placeholder="https://suaempresa.com.br" className="bg-background/50 border-white/10 focus-visible:ring-primary" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="desafio">Qual seu maior gargalo hoje?</Label>
+                <select id="desafio" className="flex h-10 w-full rounded-md border border-white/10 bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 text-white">
+                  <option value="leads" className="bg-card text-white">Gerar mais Leads (Topo de Funil)</option>
+                  <option value="vendas" className="bg-card text-white">Converter Leads em Vendas (Fundo de Funil)</option>
+                  <option value="retencao" className="bg-card text-white">Reter clientes e evitar Churn (Pós-venda)</option>
+                  <option value="dados" className="bg-card text-white">Não tenho clareza dos meus números</option>
+                </select>
+              </div>
+            </div>
+            <DialogFooter className="mt-4">
+              <DialogClose
+                render={
+                  <Button variant="outline" className="border-white/10 text-white hover:bg-white/10" />
+                }
+              >
+                Cancelar
+              </DialogClose>
+              <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold">
+                Iniciar Análise
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* MÉTRICAS PRINCIPAIS */}
@@ -138,7 +184,7 @@ export default function DashboardPage() {
                   <Tooltip 
                     contentStyle={{ backgroundColor: '#101513', borderColor: '#232c27', borderRadius: '8px', color: '#fff' }}
                     itemStyle={{ color: '#00D68F' }}
-                    formatter={(value: number) => [formatCurrency(value), "Receita"]}
+                    formatter={(value) => [formatCurrency(Number(value ?? 0)), "Receita"]}
                   />
                   <Area 
                     type="monotone" 
