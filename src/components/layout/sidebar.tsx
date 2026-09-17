@@ -19,6 +19,7 @@ import {
   Settings,
   Filter,
   Users,
+  Map,
   LogOut
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -73,6 +74,22 @@ export function Sidebar({
                 )}
                 <LayoutDashboard className={cn("h-4 w-4 transition-colors", isActive('/dashboard') ? "text-primary" : "group-hover:text-white")} />
                 Dashboard
+              </Link>
+
+              <Link
+                href="/dashboard/jornada"
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 group relative",
+                  isActive('/dashboard/jornada')
+                    ? "text-primary bg-primary/10 shadow-[inset_0_0_0_1px_rgba(72,209,122,0.2)]"
+                    : "text-muted-foreground hover:text-white hover:bg-white/5"
+                )}
+              >
+                {isActive('/dashboard/jornada') && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full shadow-[0_0_10px_rgba(72,209,122,0.8)]"></div>
+                )}
+                <Map className={cn("h-4 w-4 transition-colors", isActive('/dashboard/jornada') ? "text-primary" : "group-hover:text-white")} />
+                Minha Jornada
               </Link>
             </div>
           </div>
