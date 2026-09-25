@@ -53,3 +53,6 @@ supabase/migrations/20260917000000_fix_trigger_and_lock_signup.sql
 
 # Copias de trabalho da logo; a fonte fica em id/
 public/logo-vamo.*
+
+# Cache da CLI do Supabase
+supabase/.temp/
