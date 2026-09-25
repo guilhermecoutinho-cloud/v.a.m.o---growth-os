@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { TrendingUp, ArrowRight } from 'lucide-react'
+import { EsqueciSenha } from './esqueci-senha'
 
 export default async function LoginPage({
   searchParams,
@@ -126,12 +127,9 @@ export default async function LoginPage({
             </div>
           </form>
 
-          <p
-            className="surgir mt-7 text-center text-xs text-muted-foreground"
-            style={{ animationDelay: '390ms' }}
-          >
-            Esqueceu a senha? Fale com o suporte para receber uma nova.
-          </p>
+          <div className="surgir" style={{ animationDelay: '390ms' }}>
+            <EsqueciSenha />
+          </div>
         </div>
       </div>
     </div>

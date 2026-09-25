@@ -53,10 +53,34 @@ export async function middleware(request: NextRequest) {
     console.error('[middleware] Falha ao consultar a sessao:', erro)
   }
 
+  const caminho = request.nextUrl.pathname
+
+  // /auth/* fica fora das regras: e por ali que o link do e-mail troca
+  // o codigo por sessao, antes de a pessoa ter qualquer senha.
+  if (caminho.startsWith('/auth/')) return supabaseResponse
+
+  // A raiz tambem passa direto. Ela e o Site URL do Supabase, entao
+  // recebe os links de e-mail com a sessao no fragmento (#access_token),
+  // que so o navegador enxerga: um redirect aqui descartaria o token.
+  if (caminho === '/') return supabaseResponse
+
+  // /definir-senha exige sessao, mas nao manda para o dashboard: e
+  // justamente onde quem veio do convite escolhe a senha.
+  if (caminho.startsWith('/definir-senha')) {
+    if (!user) {
+      const destino = request.nextUrl.clone()
+      destino.pathname = '/login'
+      destino.search = '?error=' + encodeURIComponent('O link expirou. Peça um novo acesso.')
+      return NextResponse.redirect(destino)
+    }
+    return supabaseResponse
+  }
+
   // Protect private routes
-  const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard') ||
-                           request.nextUrl.pathname.startsWith('/sales') ||
-                           request.nextUrl.pathname.startsWith('/onboarding')
+  const isProtectedRoute =
+    caminho.startsWith('/dashboard') ||
+    caminho.startsWith('/sales') ||
+    caminho.startsWith('/onboarding')
 
   if (!user && isProtectedRoute) {
     const destino = request.nextUrl.clone()
@@ -65,9 +89,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect to dashboard if logged in and trying to access login
-  if (user && request.nextUrl.pathname.startsWith('/login')) {
+  if (user && caminho.startsWith('/login')) {
     const destino = request.nextUrl.clone()
     destino.pathname = '/dashboard'
+    destino.search = ''
     return NextResponse.redirect(destino)
   }
 

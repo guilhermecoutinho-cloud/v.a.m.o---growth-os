@@ -168,13 +168,14 @@ export async function converterEmAluno(leadId: string): Promise<ResultadoLead> {
   // 4. Convite de acesso
   const h = await headers()
   const host = h.get('x-forwarded-host') ?? h.get('host')
-  const proto = h.get('x-forwarded-proto') ?? 'https'
+  const proto = h.get('x-forwarded-proto') ?? (host?.startsWith('localhost') ? 'http' : 'https')
 
   const { data: convidado, error: erroConvite } = await admin.auth.admin.inviteUserByEmail(
     lead.email,
     {
       data: { full_name: lead.contact_name },
-      redirectTo: host ? `${proto}://${host}/login` : undefined,
+      // /auth/callback troca o código por sessão antes de pedir a senha.
+      redirectTo: host ? `${proto}://${host}/auth/callback?next=/definir-senha` : undefined,
     }
   )
 

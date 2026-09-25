@@ -29,12 +29,16 @@ async function exigirAdmin() {
   return papel === 'admin' ? user : null
 }
 
-/** URL para onde o convite leva. Respeita o domínio em que o app roda. */
+/**
+ * Para onde o link do e-mail leva. Precisa ser /auth/callback: é lá que
+ * o código vira sessão. Apontar direto para /login deixaria a pessoa
+ * numa tela de senha sem ter senha para digitar.
+ */
 async function urlDeRedirecionamento() {
   const h = await headers()
   const host = h.get('x-forwarded-host') ?? h.get('host')
-  const proto = h.get('x-forwarded-proto') ?? 'https'
-  return host ? `${proto}://${host}/login` : undefined
+  const proto = h.get('x-forwarded-proto') ?? (host?.startsWith('localhost') ? 'http' : 'https')
+  return host ? `${proto}://${host}/auth/callback?next=/definir-senha` : undefined
 }
 
 /**
