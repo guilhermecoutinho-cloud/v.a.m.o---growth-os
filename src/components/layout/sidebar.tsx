@@ -1,219 +1,199 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import {
   LayoutDashboard,
   Building2,
   TrendingUp,
   Target,
-  BarChart2,
   Lightbulb,
   TestTube,
-  KanbanSquare,
-  Calendar,
-  GraduationCap,
-  Video,
-  Flame,
-  User,
-  Settings,
-  Filter,
-  Users,
   Map,
-  LogOut
+  Users,
+  Filter,
+  Briefcase,
+  LogOut,
+  User,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { logout } from '@/app/login/actions'
+import { SeletorEmpresa } from './seletor-empresa'
+import type { Organizacao } from '@/lib/vamo/tipos'
+
+type ItemMenu = {
+  href?: string
+  rotulo: string
+  icone: typeof LayoutDashboard
+  /** Sem href: aparece esmaecido com o aviso de indisponível. */
+  breve?: boolean
+}
+
+const ROTULO_PAPEL: Record<string, string> = {
+  admin: 'Administrador',
+  mentor: 'Mentor',
+  sales: 'Comercial',
+  student: 'Aluno',
+}
 
 export function Sidebar({
   email,
   role,
+  organizacoes = [],
+  organizacaoAtual = null,
 }: {
   email?: string
   role?: string
+  organizacoes?: Organizacao[]
+  organizacaoAtual?: Organizacao | null
 }) {
   const pathname = usePathname()
+  const params = useSearchParams()
+  const org = params.get('org')
 
-  const isActive = (path: string) => pathname === path
+  // Mantém a empresa escolhida ao navegar entre as telas.
+  const comOrg = (href: string) => (org ? `${href}?org=${org}` : href)
+  const ativo = (href: string) => pathname === href
+
+  const grupos: Array<{ titulo: string; itens: ItemMenu[] }> = [
+    {
+      titulo: 'Visão Geral',
+      itens: [
+        { href: '/dashboard', rotulo: 'Dashboard', icone: LayoutDashboard },
+        { href: '/dashboard/jornada', rotulo: 'Minha Jornada', icone: Map },
+      ],
+    },
+    {
+      titulo: 'Minha Máquina',
+      itens: [
+        { href: '/dashboard/funil', rotulo: 'Funil Atual', icone: Filter },
+        { href: '/dashboard/arquitetura', rotulo: 'Arquitetura de Receita', icone: Building2 },
+        { rotulo: 'Alcance', icone: TrendingUp, breve: true },
+        { rotulo: 'Vendas', icone: Target, breve: true },
+      ],
+    },
+    {
+      titulo: 'Growth',
+      itens: [
+        { href: '/dashboard/hipoteses', rotulo: 'Hipóteses', icone: Lightbulb },
+        { rotulo: 'Experimentos', icone: TestTube, breve: true },
+        { rotulo: 'Plano de 90 dias', icone: Target, breve: true },
+      ],
+    },
+  ]
+
+  if (role === 'sales' || role === 'admin') {
+    grupos.push({
+      titulo: 'Comercial',
+      itens: [{ href: '/dashboard/leads', rotulo: 'Leads', icone: Briefcase }],
+    })
+  }
+
+  if (role === 'admin') {
+    grupos.push({
+      titulo: 'Administração',
+      itens: [{ href: '/dashboard/usuarios', rotulo: 'Acessos', icone: Users }],
+    })
+  }
 
   return (
-    <div className="flex h-screen w-64 flex-col border-r border-border/50 bg-card/30 backdrop-blur-xl text-foreground relative shadow-2xl">
-      {/* Decorative Glow */}
-      <div className="absolute top-0 left-0 w-full h-32 bg-primary/5 blur-3xl pointer-events-none"></div>
+    // sticky + h-screen: a barra acompanha a rolagem em vez de sumir.
+    <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r border-border/50 bg-card/30 text-foreground shadow-2xl backdrop-blur-xl">
+      <div className="pointer-events-none absolute left-0 top-0 h-32 w-full bg-primary/5 blur-3xl" />
 
-      {/* BRAND */}
-      <div className="flex h-16 items-center px-6 border-b border-border/50 relative z-10">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center shadow-[0_0_15px_rgba(72,209,122,0.4)]">
+      {/* MARCA */}
+      <div className="relative z-10 flex h-16 items-center border-b border-border/50 px-6">
+        <Link href={comOrg('/dashboard')} className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/50 shadow-[0_0_15px_rgba(0,214,143,0.4)]">
             <TrendingUp className="h-4 w-4 text-primary-foreground" />
           </div>
           <span className="text-xl font-bold tracking-tight text-white">V.A.M.O.</span>
+        </Link>
+      </div>
+
+      {/* EMPRESA */}
+      {organizacoes.length > 0 && (
+        <div className="relative z-10 border-b border-border/50 px-4 py-3">
+          <SeletorEmpresa organizacoes={organizacoes} atual={organizacaoAtual} />
         </div>
-      </div>
+      )}
 
-      <div className="flex-1 overflow-auto py-6 relative z-10 custom-scrollbar">
-        <nav className="space-y-8 px-4">
-          
-          {/* VISÃO GERAL */}
-          <div>
+      {/* NAVEGAÇÃO */}
+      <nav className="custom-scrollbar relative z-10 flex-1 space-y-7 overflow-y-auto px-4 py-6">
+        {grupos.map((grupo) => (
+          <div key={grupo.titulo}>
             <h4 className="mb-3 px-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-              Visão Geral
+              {grupo.titulo}
             </h4>
             <div className="space-y-1">
-              <Link 
-                href="/dashboard" 
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 group relative",
-                  isActive('/dashboard') 
-                    ? "text-primary bg-primary/10 shadow-[inset_0_0_0_1px_rgba(72,209,122,0.2)]" 
-                    : "text-muted-foreground hover:text-white hover:bg-white/5"
-                )}
-              >
-                {isActive('/dashboard') && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full shadow-[0_0_10px_rgba(72,209,122,0.8)]"></div>
-                )}
-                <LayoutDashboard className={cn("h-4 w-4 transition-colors", isActive('/dashboard') ? "text-primary" : "group-hover:text-white")} />
-                Dashboard
-              </Link>
+              {grupo.itens.map((item) => {
+                const Icone = item.icone
 
-              <Link
-                href="/dashboard/jornada"
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 group relative",
-                  isActive('/dashboard/jornada')
-                    ? "text-primary bg-primary/10 shadow-[inset_0_0_0_1px_rgba(72,209,122,0.2)]"
-                    : "text-muted-foreground hover:text-white hover:bg-white/5"
-                )}
-              >
-                {isActive('/dashboard/jornada') && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full shadow-[0_0_10px_rgba(72,209,122,0.8)]"></div>
-                )}
-                <Map className={cn("h-4 w-4 transition-colors", isActive('/dashboard/jornada') ? "text-primary" : "group-hover:text-white")} />
-                Minha Jornada
-              </Link>
+                if (item.breve || !item.href) {
+                  return (
+                    <div
+                      key={item.rotulo}
+                      title="Disponível em breve"
+                      aria-disabled="true"
+                      className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground/40"
+                    >
+                      <Icone className="h-4 w-4" />
+                      {item.rotulo}
+                      <span className="ml-auto text-[10px] uppercase tracking-wider">Breve</span>
+                    </div>
+                  )
+                }
+
+                const estaAtivo = ativo(item.href)
+                return (
+                  <Link
+                    key={item.rotulo}
+                    href={comOrg(item.href)}
+                    className={cn(
+                      'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                      estaAtivo
+                        ? 'bg-primary/10 text-primary shadow-[inset_0_0_0_1px_rgba(0,214,143,0.2)]'
+                        : 'text-muted-foreground hover:bg-white/5 hover:text-white'
+                    )}
+                  >
+                    {estaAtivo && (
+                      <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary shadow-[0_0_10px_rgba(0,214,143,0.8)]" />
+                    )}
+                    <Icone
+                      className={cn(
+                        'h-4 w-4 transition-colors',
+                        estaAtivo ? 'text-primary' : 'group-hover:text-white'
+                      )}
+                    />
+                    {item.rotulo}
+                  </Link>
+                )
+              })}
             </div>
           </div>
+        ))}
+      </nav>
 
-          {/* MINHA MÁQUINA */}
-          <div>
-            <h4 className="mb-3 px-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-              Minha Máquina
-            </h4>
-            <div className="space-y-1">
-              <Link 
-                href="/dashboard/arquitetura" 
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 group relative",
-                  isActive('/dashboard/arquitetura') 
-                    ? "text-primary bg-primary/10 shadow-[inset_0_0_0_1px_rgba(72,209,122,0.2)]" 
-                    : "text-muted-foreground hover:text-white hover:bg-white/5"
-                )}
-              >
-                {isActive('/dashboard/arquitetura') && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full shadow-[0_0_10px_rgba(72,209,122,0.8)]"></div>
-                )}
-                <Building2 className={cn("h-4 w-4 transition-colors", isActive('/dashboard/arquitetura') ? "text-primary" : "group-hover:text-white")} />
-                Arquitetura de Receita
-              </Link>
-              
-              <Link 
-                href="/dashboard/funil" 
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 group relative",
-                  isActive('/dashboard/funil') 
-                    ? "text-primary bg-primary/10 shadow-[inset_0_0_0_1px_rgba(72,209,122,0.2)]" 
-                    : "text-muted-foreground hover:text-white hover:bg-white/5"
-                )}
-              >
-                {isActive('/dashboard/funil') && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full shadow-[0_0_10px_rgba(72,209,122,0.8)]"></div>
-                )}
-                <Filter className={cn("h-4 w-4 transition-colors", isActive('/dashboard/funil') ? "text-primary" : "group-hover:text-white")} />
-                Funil Atual
-              </Link>
-
-              <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground/40 cursor-not-allowed">
-                <TrendingUp className="h-4 w-4" />
-                Alcance (Breve)
-              </div>
-              <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground/40 cursor-not-allowed">
-                <Target className="h-4 w-4" />
-                Vendas (Breve)
-              </div>
-            </div>
-          </div>
-
-          {/* GROWTH */}
-          <div>
-            <h4 className="mb-3 px-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-              Growth
-            </h4>
-            <div className="space-y-1">
-              <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground/40 cursor-not-allowed">
-                <BarChart2 className="h-4 w-4" />
-                Diagnóstico
-              </div>
-              <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground/40 cursor-not-allowed">
-                <Lightbulb className="h-4 w-4" />
-                Hipóteses
-              </div>
-              <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground/40 cursor-not-allowed">
-                <TestTube className="h-4 w-4" />
-                Experimentos
-              </div>
-            </div>
-          </div>
-
-          {/* ADMINISTRAÇÃO — só para admin */}
-          {role === 'admin' && (
-            <div>
-              <h4 className="mb-3 px-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-                Administração
-              </h4>
-              <div className="space-y-1">
-                <Link
-                  href="/dashboard/usuarios"
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 group relative",
-                    isActive('/dashboard/usuarios')
-                      ? "text-primary bg-primary/10 shadow-[inset_0_0_0_1px_rgba(72,209,122,0.2)]"
-                      : "text-muted-foreground hover:text-white hover:bg-white/5"
-                  )}
-                >
-                  {isActive('/dashboard/usuarios') && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full shadow-[0_0_10px_rgba(72,209,122,0.8)]"></div>
-                  )}
-                  <Users className={cn("h-4 w-4 transition-colors", isActive('/dashboard/usuarios') ? "text-primary" : "group-hover:text-white")} />
-                  Acessos
-                </Link>
-              </div>
-            </div>
-          )}
-        </nav>
-      </div>
-
-      {/* FOOTER DO SIDEBAR */}
-      <div className="border-t border-border/50 p-4 bg-background/50 relative z-10">
-        <form action={logout} className="flex items-center gap-3 rounded-lg p-2 hover:bg-white/5 transition-colors group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/20 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+      {/* USUÁRIO */}
+      <div className="relative z-10 border-t border-border/50 bg-background/50 p-4">
+        <form
+          action={logout}
+          className="group flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-white/5"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/20 text-primary transition-all group-hover:bg-primary group-hover:text-primary-foreground">
             <User className="h-4 w-4" />
           </div>
-          <div className="flex flex-col flex-1 min-w-0">
-            <span className="truncate text-sm font-semibold text-white">
-              {email ?? 'Usuário'}
-            </span>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="truncate text-sm font-semibold text-white">{email ?? 'Usuário'}</span>
             <span className="text-xs text-muted-foreground">
-              {role === 'admin' ? 'Administrador'
-                : role === 'mentor' ? 'Mentor'
-                : role === 'sales' ? 'Comercial'
-                : 'Aluno'}
+              {ROTULO_PAPEL[role ?? ''] ?? 'Aluno'}
             </span>
           </div>
           <button type="submit" title="Sair" className="shrink-0">
-            <LogOut className="h-4 w-4 text-muted-foreground group-hover:text-destructive transition-colors" />
+            <LogOut className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-destructive" />
           </button>
         </form>
       </div>
-    </div>
+    </aside>
   )
 }
