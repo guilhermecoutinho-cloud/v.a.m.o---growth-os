@@ -68,3 +68,9 @@ Marcar a função como `SECURITY DEFINER` resolve quando ela é chamada de
 A regra prática: nas policies de uma tabela, compare apenas colunas da
 própria linha (`user_id = auth.uid()`) ou chame funções que leiam
 **outras** tabelas (`is_admin()` lê `profiles`).
+
+E ao corrigir: não confie em `drop policy if exists` por nome. Policies
+antigas com nomes esquecidos sobrevivem e mantêm o ciclo. Varra
+`pg_policies` e apague todas antes de recriar — foi o que finalmente
+resolveu `organization_members`, depois de duas tentativas por nome
+falharem.
