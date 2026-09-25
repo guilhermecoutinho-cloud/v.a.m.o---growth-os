@@ -12,7 +12,16 @@ function ultimosMeses(qtd = 18): string[] {
   )
 }
 
-export function SeletorPeriodo({ periodo, org }: { periodo: string; org?: string }) {
+export function SeletorPeriodo({
+  periodo,
+  org,
+  base = '/dashboard/funil',
+}: {
+  periodo: string
+  org?: string
+  /** Rota que recebe o ?periodo=; o Funil é o padrão. */
+  base?: string
+}) {
   const router = useRouter()
   const meses = ultimosMeses()
 
@@ -29,7 +38,7 @@ export function SeletorPeriodo({ periodo, org }: { periodo: string; org?: string
           const p = new URLSearchParams()
           if (org) p.set('org', org)
           p.set('periodo', e.target.value)
-          router.push(`/dashboard/funil?${p.toString()}`)
+          router.push(`${base}?${p.toString()}`)
         }}
         className="h-10 appearance-none rounded-lg border border-border/60 bg-input/60 pl-9 pr-4 text-sm text-white focus-visible:border-primary focus-visible:outline-none"
       >

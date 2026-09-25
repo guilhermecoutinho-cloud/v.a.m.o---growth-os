@@ -137,6 +137,28 @@ export async function buscarPisos(): Promise<typeof PISOS_PADRAO> {
   return { ...PISOS_PADRAO, ...(v ?? {}) }
 }
 
+/** Como cada etapa da jornada acontece hoje, indexado por stage_id. */
+export async function buscarJornadaEmpresa(
+  organizationId: string
+): Promise<Record<string, { como_acontece: string; canal: string; responsavel: string; indicador: string }>> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('journey_stages')
+    .select('stage_id, como_acontece, canal, responsavel, indicador')
+    .eq('organization_id', organizationId)
+
+  const mapa: Record<string, { como_acontece: string; canal: string; responsavel: string; indicador: string }> = {}
+  for (const l of data ?? []) {
+    mapa[l.stage_id] = {
+      como_acontece: l.como_acontece ?? '',
+      canal: l.canal ?? '',
+      responsavel: l.responsavel ?? '',
+      indicador: l.indicador ?? '',
+    }
+  }
+  return mapa
+}
+
 export async function listarEtapasPrograma(): Promise<EtapaPrograma[]> {
   const supabase = await createClient()
   const { data } = await supabase.from('program_steps').select('*').order('step_order')

@@ -22,7 +22,7 @@ export function SemEmpresa({ papel }: { papel: string }) {
           : 'Sua conta ainda não está ligada a uma empresa. Fale com o suporte para liberar o acesso.'}
       </p>
       {ehAdmin && (
-        <Button className="mt-5" render={<Link href="/dashboard/usuarios" />}>
+        <Button className="mt-5" render={<Link href="/dashboard/acessos" />}>
           Ir para Acessos
         </Button>
       )}

@@ -4,8 +4,10 @@ import {
   buscarSnapshot,
   buscarMeta,
   buscarCenario,
+  buscarJornadaEmpresa,
 } from '@/lib/vamo/dados'
 import { ArquiteturaEditor } from './arquitetura-editor'
+import { JornadaEmpresa } from './jornada-empresa'
 import { MaquinaVamo } from '@/components/vamo/maquina-vamo'
 import { SemEmpresa } from '@/components/vamo/sem-empresa'
 
@@ -21,10 +23,11 @@ export default async function ArquiteturaPage({
   const org = sessao.organizacaoAtual
   if (!org) return <SemEmpresa papel={sessao.role} />
 
-  const [snapshot, meta, otimizado] = await Promise.all([
+  const [snapshot, meta, otimizado, jornada] = await Promise.all([
     buscarSnapshot(org.id),
     buscarMeta(org.id),
     buscarCenario(org.id, 'otimizado'),
+    buscarJornadaEmpresa(org.id),
   ])
 
   return (
@@ -34,7 +37,7 @@ export default async function ArquiteturaPage({
           Arquitetura de Receita
         </h1>
         <p className="mt-1.5 text-muted-foreground">
-          O funil reverso: da meta de receita até o investimento necessário.
+          O funil reverso e a jornada real da sua empresa, lado a lado.
         </p>
       </header>
 
@@ -46,6 +49,12 @@ export default async function ArquiteturaPage({
       />
 
       <MaquinaVamo />
+
+      <JornadaEmpresa
+        organizationId={org.id}
+        registros={jornada}
+        snapshot={snapshot}
+      />
     </div>
   )
 }

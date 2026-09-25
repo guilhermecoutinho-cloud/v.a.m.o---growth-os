@@ -119,7 +119,7 @@ export async function convidarAcesso(
     }
   }
 
-  revalidatePath('/dashboard/usuarios')
+  revalidatePath('/dashboard/acessos')
   return { ok: true, message: `Convite enviado para ${email}.` }
 }
 
@@ -163,6 +163,6 @@ export async function revogarAcesso(
   const { error } = await admin.auth.admin.deleteUser(userId)
   if (error) return { ok: false, message: `Não foi possível revogar: ${error.message}` }
 
-  revalidatePath('/dashboard/usuarios')
+  revalidatePath('/dashboard/acessos')
   return { ok: true, message: `Acesso de ${email} revogado.` }
 }

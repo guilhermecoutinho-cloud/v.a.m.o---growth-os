@@ -10,6 +10,7 @@ import {
   Lightbulb,
   TestTube,
   Map,
+  Megaphone,
   Users,
   Filter,
   Briefcase,
@@ -67,8 +68,8 @@ export function Sidebar({
       titulo: 'Minha Máquina',
       itens: [
         { href: '/dashboard/funil', rotulo: 'Funil Atual', icone: Filter },
+        { href: '/dashboard/aquisicao', rotulo: 'Aquisição', icone: Megaphone },
         { href: '/dashboard/arquitetura', rotulo: 'Arquitetura de Receita', icone: Building2 },
-        { rotulo: 'Alcance', icone: TrendingUp, breve: true },
         { rotulo: 'Vendas', icone: Target, breve: true },
       ],
     },
@@ -76,7 +77,7 @@ export function Sidebar({
       titulo: 'Growth',
       itens: [
         { href: '/dashboard/hipoteses', rotulo: 'Hipóteses', icone: Lightbulb },
-        { rotulo: 'Experimentos', icone: TestTube, breve: true },
+        { href: '/dashboard/experimentos', rotulo: 'Experimentos', icone: TestTube },
         { rotulo: 'Plano de 90 dias', icone: Target, breve: true },
       ],
     },
@@ -92,7 +93,7 @@ export function Sidebar({
   if (role === 'admin') {
     grupos.push({
       titulo: 'Administração',
-      itens: [{ href: '/dashboard/usuarios', rotulo: 'Acessos', icone: Users }],
+      itens: [{ href: '/dashboard/acessos', rotulo: 'Acessos', icone: Users }],
     })
   }
 
