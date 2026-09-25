@@ -48,3 +48,23 @@ a sessão no fragmento da URL.
 
 A fonte continua sendo `supabase/migrations/`. Ao criar uma migration
 nova, regenere o arquivo único concatenando-as na ordem dos nomes.
+
+## Cuidado ao escrever policies
+
+Uma policy nunca deve consultar a própria tabela que protege — nem
+indiretamente, através de uma função. O Postgres responde `42P17:
+infinite recursion` e a consulta inteira falha com 500.
+
+Isso já aconteceu duas vezes neste projeto:
+
+- `profiles`: a policy de admin fazia `select 1 from profiles`.
+- `organization_members`: a policy chamava `is_member()`, que lê
+  `organization_members`.
+
+Marcar a função como `SECURITY DEFINER` resolve quando ela é chamada de
+**outra** tabela, mas não quando a policy da própria tabela a invoca: o
+`in (select ...)` dentro da policy ainda reavalia a tabela.
+
+A regra prática: nas policies de uma tabela, compare apenas colunas da
+própria linha (`user_id = auth.uid()`) ou chame funções que leiam
+**outras** tabelas (`is_admin()` lê `profiles`).
