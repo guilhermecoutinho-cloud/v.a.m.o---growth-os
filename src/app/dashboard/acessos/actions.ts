@@ -87,17 +87,25 @@ export async function convidarAcesso(
     redirectTo: await urlDeRedirecionamento(),
   })
 
+  let userId = convidado?.user?.id
+  let reaproveitou = false
+
   if (error) {
     const jaExiste = error.message.toLowerCase().includes('already')
-    return {
-      ok: false,
-      message: jaExiste
-        ? 'Já existe uma conta com este e-mail.'
-        : `Não foi possível convidar: ${error.message}`,
+    if (!jaExiste) {
+      return { ok: false, message: `Não foi possível convidar: ${error.message}` }
+    }
+    // A conta já existe: em vez de abandonar a empresa recém-criada,
+    // vinculamos a pessoa a ela. Antes a função voltava aqui e a
+    // empresa ficava órfã, sem nenhum membro.
+    const { data: lista } = await admin.auth.admin.listUsers()
+    userId = lista?.users.find((u) => u.email?.toLowerCase() === email)?.id
+    reaproveitou = true
+    if (!userId) {
+      return { ok: false, message: 'Já existe uma conta com este e-mail, mas não a encontrei.' }
     }
   }
 
-  const userId = convidado.user?.id
   if (!userId) return { ok: false, message: 'Convite enviado, mas o usuário não foi retornado.' }
 
   // O papel vai em app_metadata, que só o servidor escreve. O trigger
@@ -106,12 +114,22 @@ export async function convidarAcesso(
   await admin.from('profiles').update({ role: papel, full_name: nome || null }).eq('id', userId)
 
   if (organizationId) {
-    await admin.from('organization_members').insert({
-      organization_id: organizationId,
-      user_id: userId,
-      role: papel,
-      member_role: 'owner',
-    })
+    // upsert: repetir o vínculo não gera erro nem duplicata.
+    const { error: erroVinculo } = await admin.from('organization_members').upsert(
+      {
+        organization_id: organizationId,
+        user_id: userId,
+        role: papel,
+        member_role: 'owner',
+      },
+      { onConflict: 'organization_id,user_id' }
+    )
+    if (erroVinculo) {
+      return {
+        ok: false,
+        message: `Conta pronta, mas o vínculo com a empresa falhou: ${erroVinculo.message}`,
+      }
+    }
     if (mentorId) {
       await admin
         .from('mentor_assignments')
@@ -119,8 +137,13 @@ export async function convidarAcesso(
     }
   }
 
-  revalidatePath('/dashboard/acessos')
-  return { ok: true, message: `Convite enviado para ${email}.` }
+  revalidatePath('/dashboard', 'layout')
+  return {
+    ok: true,
+    message: reaproveitou
+      ? `${email} já tinha conta e foi vinculado à empresa.`
+      : `Convite enviado para ${email}.`,
+  }
 }
 
 /** Reenvia o link de acesso; a pessoa define a senha por e-mail. */
