@@ -120,12 +120,43 @@ export function CriarAcessoForm({
               </div>
 
               {criandoEmpresa ? (
-                <Input
-                  name="new_organization"
-                  required
-                  placeholder="Nome da empresa"
-                  className="h-10 bg-input/60 text-foreground"
-                />
+                <div className="space-y-3">
+                  <Input
+                    name="new_organization"
+                    required
+                    placeholder="Nome da empresa"
+                    className="h-10 bg-input/60 text-foreground"
+                  />
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <Input
+                      name="segment"
+                      placeholder="Segmento"
+                      className="h-10 bg-input/60 text-sm text-foreground"
+                    />
+                    <select
+                      name="employees_count"
+                      defaultValue=""
+                      aria-label="Porte da empresa"
+                      className="h-10 rounded-lg border border-border/60 bg-input/60 px-2 text-sm text-foreground"
+                    >
+                      <option value="" className="bg-card">Porte</option>
+                      <option value="1-5" className="bg-card">1 a 5 pessoas</option>
+                      <option value="6-20" className="bg-card">6 a 20</option>
+                      <option value="21-50" className="bg-card">21 a 50</option>
+                      <option value="51-200" className="bg-card">51 a 200</option>
+                      <option value="200+" className="bg-card">Mais de 200</option>
+                    </select>
+                    <select
+                      name="business_model"
+                      defaultValue="transacional"
+                      aria-label="Modelo de negócio"
+                      className="h-10 rounded-lg border border-border/60 bg-input/60 px-2 text-sm text-foreground"
+                    >
+                      <option value="transacional" className="bg-card">Transacional</option>
+                      <option value="recorrente" className="bg-card">Recorrente</option>
+                    </select>
+                  </div>
+                </div>
               ) : (
                 <select
                   name="organization_id"

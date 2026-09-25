@@ -73,9 +73,15 @@ export async function convidarAcesso(
   // A empresa vem antes do convite: se falhar, ninguém é criado.
   let organizationId = empresaExistente || null
   if (!organizationId && empresaNova) {
+    const modelo = String(formData.get('business_model') ?? 'transacional')
     const { data, error } = await admin
       .from('organizations')
-      .insert({ name: empresaNova })
+      .insert({
+        name: empresaNova,
+        segment: String(formData.get('segment') ?? '').trim() || null,
+        employees_count: String(formData.get('employees_count') ?? '').trim() || null,
+        business_model: modelo === 'recorrente' ? 'recorrente' : 'transacional',
+      })
       .select('id')
       .single()
     if (error) return { ok: false, message: `Não foi possível criar a empresa: ${error.message}` }
