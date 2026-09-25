@@ -1,4 +1,5 @@
 import 'server-only'
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import type {
   Snapshot,
@@ -29,34 +30,49 @@ export type Sessao = {
   organizacaoAtual: Organizacao | null
 }
 
-/** Quem está logado, seu papel e as empresas que alcança. */
-export async function carregarSessao(orgPreferida?: string): Promise<Sessao | null> {
+/**
+ * Quem está logado, seu papel e as empresas que alcança.
+ *
+ * Envolvida em cache(): o layout e a página chamam esta função na mesma
+ * navegação, e sem isso as consultas rodariam duas vezes. Cada ida ao
+ * banco custa caro quando a função roda longe dele, então a duplicação
+ * dobrava o tempo de resposta.
+ *
+ * O cache do React vale apenas dentro de uma requisição: dois usuários
+ * nunca compartilham sessão.
+ */
+export const carregarSessao = cache(async function carregarSessao(
+  orgPreferida?: string
+): Promise<Sessao | null> {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return null
 
-  let role = (user.app_metadata?.role as string) ?? ''
-  if (!role) {
-    const { data } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-    role = data?.role ?? 'student'
-  }
+  // O papel quase sempre vem no token. Quando vem, a consulta a
+  // profiles não acontece — e ela era a mais lenta das três.
+  const papelNoToken = (user.app_metadata?.role as string) ?? ''
 
-  // O RLS já limita o que cada papel enxerga.
-  const { data: orgs } = await supabase
-    .from('organizations')
-    .select('id, name, segment, business_model')
-    .order('name')
+  // As duas consultas são independentes: rodam juntas em vez de uma
+  // esperar a outra.
+  const [orgsResp, perfilResp] = await Promise.all([
+    supabase.from('organizations').select('id, name, segment, business_model').order('name'),
+    papelNoToken
+      ? Promise.resolve({ data: null })
+      : supabase.from('profiles').select('role').eq('id', user.id).single(),
+  ])
 
-  const organizacoes = (orgs ?? []) as Organizacao[]
+  const role = papelNoToken || (perfilResp.data as { role?: string } | null)?.role || 'student'
+
+  const organizacoes = (orgsResp.data ?? []) as Organizacao[]
   const organizacaoAtual =
     organizacoes.find((o) => o.id === orgPreferida) ?? organizacoes[0] ?? null
 
   return { userId: user.id, email: user.email, role, organizacoes, organizacaoAtual }
-}
+})
 
-export async function buscarSnapshot(
+export const buscarSnapshot = cache(async function buscarSnapshot(
   organizationId: string,
   periodo?: string
 ): Promise<Snapshot | null> {
@@ -68,9 +84,9 @@ export async function buscarSnapshot(
 
   const { data } = await q
   return ((data?.[0] as Snapshot) ?? null)
-}
+})
 
-export async function listarSnapshots(
+export const listarSnapshots = cache(async function listarSnapshots(
   organizationId: string,
   limite = 12
 ): Promise<Snapshot[]> {
@@ -82,9 +98,9 @@ export async function listarSnapshots(
     .order('period', { ascending: false })
     .limit(limite)
   return ((data ?? []) as Snapshot[]).reverse() // ordem cronológica
-}
+})
 
-export async function buscarMeta(organizationId: string): Promise<MetaReceita | null> {
+export const buscarMeta = cache(async function buscarMeta(organizationId: string): Promise<MetaReceita | null> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('revenue_goals')
@@ -93,16 +109,16 @@ export async function buscarMeta(organizationId: string): Promise<MetaReceita | 
     .order('valid_from', { ascending: false })
     .limit(1)
   return ((data?.[0] as MetaReceita) ?? null)
-}
+})
 
-export async function buscarCenarios(organizationId: string): Promise<Cenario[]> {
+export const buscarCenarios = cache(async function buscarCenarios(organizationId: string): Promise<Cenario[]> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('revenue_scenarios')
     .select('*')
     .eq('organization_id', organizationId)
   return (data ?? []) as Cenario[]
-}
+})
 
 export async function buscarCenario(
   organizationId: string,
@@ -112,15 +128,15 @@ export async function buscarCenario(
   return cenarios.find((c) => c.name === nome) ?? null
 }
 
-export async function buscarBiblioteca(no?: string): Promise<ItemBiblioteca[]> {
+export const buscarBiblioteca = cache(async function buscarBiblioteca(no?: string): Promise<ItemBiblioteca[]> {
   const supabase = await createClient()
   let q = supabase.from('hypothesis_library').select('*').eq('active', true)
   if (no) q = q.eq('node', no)
   const { data } = await q.order('sort_order')
   return (data ?? []) as ItemBiblioteca[]
-}
+})
 
-export async function listarHipoteses(organizationId: string): Promise<Hipotese[]> {
+export const listarHipoteses = cache(async function listarHipoteses(organizationId: string): Promise<Hipotese[]> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('hypotheses')
@@ -128,17 +144,17 @@ export async function listarHipoteses(organizationId: string): Promise<Hipotese[
     .eq('organization_id', organizationId)
     .order('created_at', { ascending: false })
   return (data ?? []) as Hipotese[]
-}
+})
 
-export async function buscarPisos(): Promise<typeof PISOS_PADRAO> {
+export const buscarPisos = cache(async function buscarPisos(): Promise<typeof PISOS_PADRAO> {
   const supabase = await createClient()
   const { data } = await supabase.from('settings').select('value').eq('key', 'benchmarks').single()
   const v = data?.value as Partial<typeof PISOS_PADRAO> | undefined
   return { ...PISOS_PADRAO, ...(v ?? {}) }
-}
+})
 
 /** Como cada etapa da jornada acontece hoje, indexado por stage_id. */
-export async function buscarJornadaEmpresa(
+export const buscarJornadaEmpresa = cache(async function buscarJornadaEmpresa(
   organizationId: string
 ): Promise<Record<string, { como_acontece: string; canal: string; responsavel: string; indicador: string }>> {
   const supabase = await createClient()
@@ -157,22 +173,22 @@ export async function buscarJornadaEmpresa(
     }
   }
   return mapa
-}
+})
 
-export async function listarEtapasPrograma(): Promise<EtapaPrograma[]> {
+export const listarEtapasPrograma = cache(async function listarEtapasPrograma(): Promise<EtapaPrograma[]> {
   const supabase = await createClient()
   const { data } = await supabase.from('program_steps').select('*').order('step_order')
   return (data ?? []) as EtapaPrograma[]
-}
+})
 
-export async function buscarProgresso(organizationId: string): Promise<ProgressoEtapa[]> {
+export const buscarProgresso = cache(async function buscarProgresso(organizationId: string): Promise<ProgressoEtapa[]> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('program_progress')
     .select('*')
     .eq('organization_id', organizationId)
   return (data ?? []) as ProgressoEtapa[]
-}
+})
 
 /** Tudo que o Dashboard precisa, numa ida só. */
 export async function carregarPainel(organizationId: string) {

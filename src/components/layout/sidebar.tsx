@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { TrendingUp, LogOut, User, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { logout } from '@/app/login/actions'
@@ -136,6 +136,7 @@ function LinhaMenu({
   ativo: boolean
   href?: string
 }) {
+  const router = useRouter()
   const Icone = item.icone
 
   // Sem o produto: cadeado à direita, não clicável.
@@ -171,6 +172,12 @@ function LinhaMenu({
   return (
     <Link
       href={href}
+      // Sem prefetch automático: a barra tem ~20 itens, e o padrão do
+      // Next pré-carregaria todos os visíveis de uma vez. O onMouseEnter
+      // abaixo carrega só aquele que a pessoa está prestes a clicar.
+      prefetch={false}
+      onMouseEnter={() => router.prefetch(href)}
+      onFocus={() => router.prefetch(href)}
       className={cn(
         'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
         ativo
