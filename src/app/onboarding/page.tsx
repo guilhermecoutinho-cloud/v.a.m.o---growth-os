@@ -62,7 +62,7 @@ export default function OnboardingPage() {
               </div>
               <div className="pt-4 flex items-center justify-between text-sm text-muted-foreground bg-muted p-4 rounded-md border border-border">
                 <span>Não tem algum número exato?</span>
-                <Button variant="outline" size="sm">Marcar "NÃO SEI"</Button>
+                <Button variant="outline" size="sm">Marcar &ldquo;NÃO SEI&rdquo;</Button>
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">

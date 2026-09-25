@@ -58,12 +58,9 @@ export function FunilEditor({
   const [salvando, iniciarSalvamento] = useTransition()
   const primeiraRenderizacao = useRef(true)
 
-  // Recarrega quando o período muda (o pai troca o snapshot).
-  useEffect(() => {
-    setValores(extrair(snapshot))
-    setDesconhecidos(new Set(snapshot?.unknown_fields ?? []))
-    primeiraRenderizacao.current = true
-  }, [snapshot, periodo])
+  // Sem efeito de sincronia com as props: a página monta este editor
+  // com key={periodo}, então trocar de mês já remonta o componente com
+  // o estado inicial correto.
 
   // Autosave com espera: grava ~800 ms depois da última tecla.
   useEffect(() => {

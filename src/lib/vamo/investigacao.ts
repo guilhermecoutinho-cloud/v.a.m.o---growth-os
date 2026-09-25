@@ -1,7 +1,7 @@
 import type { No, CampoSnapshot } from './modelo'
 import { NO_POR_ID, ROTULO_CAMPO } from './modelo'
 import type { Snapshot, Cenario } from './tipos'
-import { taxasDe, impactoPotencial, taxa } from './calculos'
+import { taxasDe, impactoPotencial } from './calculos'
 
 /**
  * Motor de investigação.

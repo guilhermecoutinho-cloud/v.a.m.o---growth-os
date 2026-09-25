@@ -56,3 +56,6 @@ public/logo-vamo.*
 
 # Cache da CLI do Supabase
 supabase/.temp/
+
+# Rota antiga de diagnostico, substituida por /dashboard/leads/[leadId]
+src/app/sales/

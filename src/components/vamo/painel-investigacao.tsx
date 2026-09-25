@@ -36,28 +36,32 @@ export function PainelInvestigacao({
 }) {
   const [selecionado, setSelecionado] = useState(0)
   const ponto = pontos[selecionado]
-  const [biblioteca, setBiblioteca] = useState<ItemBiblioteca[]>([])
-  const [carregando, setCarregando] = useState(true)
+  // Guarda o nó junto com os dados: enquanto o nó carregado não for o
+  // nó em foco, a lista ainda está chegando. Evita um setState de
+  // "carregando" no corpo do efeito, que dispara render em cascata.
+  const [cache, setCache] = useState<{ no: string; itens: ItemBiblioteca[] } | null>(null)
 
   useEffect(() => {
+    const no = ponto?.no
+    if (!no) return
     let vivo = true
-    setCarregando(true)
     const supabase = createClient()
     supabase
       .from('hypothesis_library')
       .select('*')
-      .eq('node', ponto?.no ?? '')
+      .eq('node', no)
       .eq('active', true)
       .order('sort_order')
       .then(({ data }) => {
-        if (!vivo) return
-        setBiblioteca((data ?? []) as ItemBiblioteca[])
-        setCarregando(false)
+        if (vivo) setCache({ no, itens: (data ?? []) as ItemBiblioteca[] })
       })
     return () => {
       vivo = false
     }
   }, [ponto?.no])
+
+  const carregando = cache?.no !== ponto?.no
+  const biblioteca = carregando ? [] : (cache?.itens ?? [])
 
   if (!ponto) return null
 

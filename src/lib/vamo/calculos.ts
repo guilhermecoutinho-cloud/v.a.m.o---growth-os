@@ -1,5 +1,5 @@
 import type { No } from './modelo'
-import type { Snapshot, Cenario } from './tipos'
+import type { Snapshot } from './tipos'
 
 /**
  * Matemática da máquina, sem React e sem banco: entra número, sai
