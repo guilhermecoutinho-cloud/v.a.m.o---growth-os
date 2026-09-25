@@ -137,7 +137,7 @@ export function PainelInvestigacao({
 
         <p className="border-l-2 border-amber-500/40 pl-3 text-sm italic text-muted-foreground">
           {ehDadoAusente
-            ? 'Sem esse dado, não dá para saber se este ponto limita sua máquina. Não saber já é uma descoberta importante.'
+            ? 'Sem esse dado, não dá para saber se este ponto limita sua operação. Não saber já é uma descoberta importante.'
             : 'Uma taxa baixa mostra ONDE olhar, não POR QUÊ. Abaixo estão possíveis causas. Verifique antes de agir.'}
         </p>
         <p className="text-xs text-muted-foreground">{rotuloMotivo(ponto)}</p>

@@ -82,8 +82,8 @@ export const BLOCOS_REUNIAO = [
     apoio: 'Receita hoje, meta e prazo. O gap aparece sozinho.',
   },
   {
-    id: 'maquina',
-    titulo: 'Máquina atual',
+    id: 'operacao',
+    titulo: 'Operação atual',
     minutos: '12–25 min',
     apoio: 'Os mesmos campos do Funil Atual. "Não sei" é resposta válida.',
   },

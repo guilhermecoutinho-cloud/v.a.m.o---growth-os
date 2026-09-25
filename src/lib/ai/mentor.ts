@@ -21,7 +21,7 @@ import { taxasDe, receitaDe } from '@/lib/vamo/calculos'
 
 export type ContextoMentor = {
   organizacaoId: string
-  maquinaAtual: {
+  operacaoAtual: {
     periodo: string | null
     receita: number | null
     taxas: ReturnType<typeof taxasDe>
@@ -57,7 +57,7 @@ export async function getMentorContext(organizationId: string): Promise<Contexto
 
   return {
     organizacaoId: organizationId,
-    maquinaAtual: {
+    operacaoAtual: {
       periodo: atual?.period ?? null,
       receita: receitaDe(atual),
       taxas: taxasDe(atual),

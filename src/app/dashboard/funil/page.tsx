@@ -37,7 +37,7 @@ export default async function FunilPage({
             Funil Atual
           </h1>
           <p className="mt-1.5 text-muted-foreground">
-            A fotografia da sua máquina neste mês. Cada número registrado vira base de diagnóstico.
+            A fotografia da sua operação neste mês. Cada número registrado vira base de diagnóstico.
           </p>
         </div>
         <SeletorPeriodo periodo={periodo} org={params.org} />

@@ -31,7 +31,7 @@ export default async function JornadaPage({
   /**
    * Etapas com entregável ganham um check automático quando o dado
    * existe de verdade. A etapa 2 só está pronta com snapshot E ao menos
-   * uma hipótese — é o que o entregável "Mapa Atual da Máquina" pede.
+   * uma hipótese — é o que o entregável "Mapa Atual da Operação" pede.
    */
   const entregaveisProntos = new Set<number>()
   if (snapshot) entregaveisProntos.add(1)

@@ -109,7 +109,7 @@ export async function salvarDiagnostico(entrada: {
 
 /**
  * Converte o lead em aluno. O que foi levantado na reunião vira a
- * máquina da empresa: o aluno entra e encontra tudo preenchido, sem
+ * operação da empresa: o aluno entra e encontra tudo preenchido, sem
  * redigitar nada.
  */
 export async function converterEmAluno(leadId: string): Promise<ResultadoLead> {
@@ -141,7 +141,7 @@ export async function converterEmAluno(leadId: string): Promise<ResultadoLead> {
     .single()
   if (erroOrg) return { ok: false, mensagem: `Não foi possível criar a empresa: ${erroOrg.message}` }
 
-  // 2. A máquina levantada na reunião vira o snapshot do mês
+  // 2. A operação levantada na reunião vira o snapshot do mês
   if (diagnostico?.snapshot_json) {
     const s = diagnostico.snapshot_json as {
       valores?: Record<string, number | null>

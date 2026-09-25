@@ -65,7 +65,7 @@ export function Sidebar({
       ],
     },
     {
-      titulo: 'Minha Máquina',
+      titulo: 'Minha Operação',
       itens: [
         { href: '/dashboard/funil', rotulo: 'Funil Atual', icone: Filter },
         { href: '/dashboard/aquisicao', rotulo: 'Aquisição', icone: Megaphone },

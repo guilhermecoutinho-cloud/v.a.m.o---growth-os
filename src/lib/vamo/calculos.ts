@@ -2,7 +2,7 @@ import type { No } from './modelo'
 import type { Snapshot } from './tipos'
 
 /**
- * Matemática da máquina, sem React e sem banco: entra número, sai
+ * Matemática da operação, sem React e sem banco: entra número, sai
  * número. Fica isolada aqui para que Dashboard, Funil e Arquitetura
  * cheguem sempre ao mesmo resultado.
  */

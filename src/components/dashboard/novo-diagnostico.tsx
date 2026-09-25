@@ -35,7 +35,7 @@ export function NovoDiagnostico() {
         <DialogHeader>
           <DialogTitle className="text-xl">Iniciar Novo Diagnóstico</DialogTitle>
           <DialogDescription className="mt-2 text-muted-foreground">
-            Vamos identificar os maiores gargalos da sua máquina. Preencha os
+            Vamos entender como sua operação funciona hoje. Preencha os
             dados básicos para a IA iniciar a análise.
           </DialogDescription>
         </DialogHeader>

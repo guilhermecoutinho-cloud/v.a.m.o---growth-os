@@ -1,5 +1,5 @@
 /**
- * Máquina V.A.M.O. — modelo único da plataforma.
+ * Jornada V.A.M.O. — modelo único da plataforma.
  *
  * Substitui a Gravata Borboleta: todas as telas passam a falar dos
  * mesmos nós e das mesmas alavancas. Nenhum número de negócio vive
@@ -25,7 +25,7 @@ export type No =
 
 export const ALAVANCAS: Record<Alavanca, { numero: string; nome: string; definicao: string }> = {
   demanda:      { numero: '01', nome: 'Demanda',      definicao: 'Gerar mais oportunidades qualificadas' },
-  qualificacao: { numero: '02', nome: 'Qualificação', definicao: 'Melhorar quem entra na máquina' },
+  qualificacao: { numero: '02', nome: 'Qualificação', definicao: 'Melhorar quem entra na operação' },
   conversao:    { numero: '03', nome: 'Conversão',    definicao: 'Transformar mais oportunidades existentes em clientes' },
   ticket:       { numero: '04', nome: 'Ticket',       definicao: 'Capturar mais valor por venda' },
   frequencia:   { numero: '05', nome: 'Frequência',   definicao: 'Fazer bons clientes comprarem mais vezes' },
@@ -33,8 +33,8 @@ export const ALAVANCAS: Record<Alavanca, { numero: string; nome: string; definic
   indicacao:    { numero: '07', nome: 'Indicação',    definicao: 'Transformar clientes em fonte de aquisição' },
 }
 
-/** Etapas da máquina completa (visão macro, sem números). */
-export const MAQUINA = [
+/** Etapas da jornada completa (visão macro, sem números). */
+export const ETAPAS_MACRO = [
   'Mercado',
   'Atenção',
   'Demanda',

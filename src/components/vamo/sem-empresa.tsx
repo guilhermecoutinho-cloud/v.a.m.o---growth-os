@@ -18,7 +18,7 @@ export function SemEmpresa({ papel }: { papel: string }) {
       <h2 className="text-xl font-bold text-white">Nenhuma empresa vinculada</h2>
       <p className="mt-2 max-w-md text-muted-foreground">
         {ehAdmin
-          ? 'Cadastre uma empresa e vincule o aluno a ela para começar a registrar a máquina.'
+          ? 'Cadastre uma empresa e vincule o aluno a ela para começar a registrar a operação.'
           : 'Sua conta ainda não está ligada a uma empresa. Fale com o suporte para liberar o acesso.'}
       </p>
       {ehAdmin && (

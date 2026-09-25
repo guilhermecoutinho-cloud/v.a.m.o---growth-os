@@ -176,7 +176,7 @@ export function ReuniaoDiagnostica({
                   </div>
                 )}
 
-                {bloco.id === 'maquina' && (
+                {bloco.id === 'operacao' && (
                   <div className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       {CAMPOS_REUNIAO.map((campo) => (

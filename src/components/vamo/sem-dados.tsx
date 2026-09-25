@@ -14,7 +14,7 @@ export function SemDados({ href }: { href: string }) {
       </h2>
       <p className="mt-2 max-w-md text-muted-foreground">
         Antes de tentar crescer, precisamos entender como sua empresa cresce hoje. Comece pela
-        fotografia da sua máquina.
+        fotografia da sua operação.
       </p>
       <Button
         className="mt-5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90"

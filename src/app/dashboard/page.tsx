@@ -72,7 +72,7 @@ export default async function DashboardPage({
     .map((s) => ({ name: rotuloPeriodoCurto(s.period), receita: receitaDe(s) ?? 0 }))
     .filter((d) => d.receita > 0)
 
-  // Próximos passos seguem o estado real da máquina.
+  // Próximos passos seguem o estado real da operação.
   const passos: Array<{ titulo: string; detalhe: string; href: string }> = []
   if (principal) {
     passos.push({
@@ -111,7 +111,7 @@ export default async function DashboardPage({
       <header className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            Sua Máquina de Crescimento
+            Sua Operação de Crescimento
           </h1>
           <p className="mt-1.5 text-muted-foreground">
             {org.name} · {rotuloPeriodo(atual.period)}
@@ -217,7 +217,7 @@ export default async function DashboardPage({
         <Card className="border-border/60 bg-card lg:col-span-3">
           <CardHeader>
             <CardTitle className="text-xl text-white">Próximos Passos</CardTitle>
-            <CardDescription>Baseados no estado atual da sua máquina</CardDescription>
+            <CardDescription>Baseados no estado atual da sua operação</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-5">

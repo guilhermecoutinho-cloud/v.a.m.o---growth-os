@@ -143,7 +143,7 @@ export function ArquiteturaEditor({
           <div className="grid gap-3 sm:grid-cols-3">
             <Coluna
               titulo="Atual"
-              descricao="O que sua máquina entrega hoje"
+              descricao="O que sua operação entrega hoje"
               linhas={[
                 ['Receita', formatarMoeda(receitaHoje)],
                 ['Vendas', formatarNumero(snapshot?.sales ?? null)],

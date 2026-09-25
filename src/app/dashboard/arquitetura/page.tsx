@@ -8,7 +8,7 @@ import {
 } from '@/lib/vamo/dados'
 import { ArquiteturaEditor } from './arquitetura-editor'
 import { JornadaEmpresa } from './jornada-empresa'
-import { MaquinaVamo } from '@/components/vamo/maquina-vamo'
+import { JornadaVamo } from '@/components/vamo/jornada-vamo'
 import { SemEmpresa } from '@/components/vamo/sem-empresa'
 
 export default async function ArquiteturaPage({
@@ -48,7 +48,7 @@ export default async function ArquiteturaPage({
         cenarioOtimizado={otimizado}
       />
 
-      <MaquinaVamo />
+      <JornadaVamo />
 
       <JornadaEmpresa
         organizationId={org.id}

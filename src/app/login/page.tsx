@@ -121,7 +121,7 @@ export default async function LoginPage({
                 type="submit"
                 className="group h-12 w-full bg-primary text-base font-semibold text-primary-foreground shadow-[0_0_24px_-6px_var(--primary)] transition-transform duration-200 hover:bg-primary/90 hover:shadow-[0_0_34px_-4px_var(--primary)] active:scale-[0.99]"
               >
-                Entrar na Máquina
+                Entrar
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
               </Button>
             </div>

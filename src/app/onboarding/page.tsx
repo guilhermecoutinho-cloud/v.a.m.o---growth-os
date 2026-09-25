@@ -51,7 +51,7 @@ export default function OnboardingPage() {
         {step === 3 && (
           <>
             <CardHeader>
-              <CardTitle className="text-2xl">Máquina Atual</CardTitle>
+              <CardTitle className="text-2xl">Operação Atual</CardTitle>
               <CardDescription>Revise os números do seu funil (coletados no diagnóstico).</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
