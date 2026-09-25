@@ -25,7 +25,7 @@ Cole e rode. Cada linha do resultado deve dizer **OK**:
 | RLS ligado | 0 tabelas sem RLS |
 | funções de RLS | 4 de 4 |
 | etapas do programa | 9 de 9 |
-| biblioteca de causas | 22 de 22 |
+| biblioteca de causas | 25 de 25 |
 | pisos de referência | 1 registro |
 | tabela funnels removida | sim |
 

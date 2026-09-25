@@ -23,7 +23,7 @@
 --   metric_snapshots ...... a fotografia mensal da maquina (fonte de verdade)
 --   revenue_goals ......... meta mensal de receita
 --   revenue_scenarios ..... cenarios atual / meta / otimizado
---   hypothesis_library .... 22 possiveis causas, prontas para uso
+--   hypothesis_library .... 25 possiveis causas, prontas para uso
 --   investigations ........ pontos sinalizados para investigar
 --   hypotheses ............ hipoteses SE/ENTAO/PORQUE do aluno
 --   program_steps ......... as 9 etapas do programa

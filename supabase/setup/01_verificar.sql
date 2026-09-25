@@ -58,11 +58,11 @@ from program_steps
 
 union all
 
--- 5. As 22 possiveis causas foram semeadas?
+-- 5. As 25 possiveis causas foram semeadas?
 select
   'biblioteca de causas',
-  count(*) || ' de 22',
-  case when count(*) = 22 then 'OK' else 'FALTANDO' end
+  count(*) || ' de 25',
+  case when count(*) = 25 then 'OK' else 'FALTANDO' end
 from hypothesis_library
 
 union all
