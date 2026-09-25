@@ -86,8 +86,13 @@ where email = 'marketingcampinas@capitalupgrade.com.br';
 
 
 -- ============================================================
--- 5. SOBRA DE SEGURANCA
+-- 5. SOBRA DE SEGURANCA  ⚠ HISTORICO — NAO RODE ESTE BLOCO HOJE
 -- ------------------------------------------------------------
+-- ATENCAO: o update abaixo rebaixa a 'student' qualquer admin que
+-- nao seja o dono. Fazia sentido em 17/09, quando o trigger falho
+-- promovia todo mundo a admin. Hoje ele rebaixaria administradores
+-- legitimos — ja aconteceu uma vez. Veja
+-- 20260925000004_admins_multiplos.sql.
 -- Qualquer perfil admin remanescente que nao seja o dono volta
 -- a ser student. Protege contra contas criadas pelo trigger
 -- falho antes desta correcao.

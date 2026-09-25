@@ -154,14 +154,27 @@ export const MENU: GrupoMenu[] = [
   },
 ]
 
+const TODOS_OS_PRODUTOS: Produto[] = ['vamo', 'estruturacao']
+
 /**
- * Por enquanto o admin enxerga tudo e o aluno recebe apenas o V.A.M.O.
- * Quando a permissão por produto virar dado no banco, esta função passa
- * a lê-la — nada mais na barra precisa mudar.
+ * Quais produtos a pessoa tem.
+ *
+ * Admin e mentor recebem todos, sempre: quem administra a plataforma
+ * precisa alcançar qualquer tela funcional, e o mentor acompanha
+ * empresas que podem ter os dois produtos. Isso não passa por
+ * configuração — é regra do sistema.
+ *
+ * Quando a permissão do aluno virar dado no banco, só o último return
+ * muda; nada mais na barra precisa saber disso.
  */
 export function produtosDoUsuario(papel?: string): Produto[] {
-  if (papel === 'admin' || papel === 'mentor') return ['vamo', 'estruturacao']
+  if (papel === 'admin' || papel === 'mentor') return TODOS_OS_PRODUTOS
   return ['vamo']
+}
+
+/** Atalho legível para checar acesso irrestrito. */
+export function temAcessoTotal(papel?: string): boolean {
+  return papel === 'admin' || papel === 'mentor'
 }
 
 export type EstadoItem = 'ativo' | 'breve' | 'bloqueado'
@@ -179,6 +192,10 @@ export function estadoDoItem(item: ItemMenu, produtos: Produto[]): EstadoItem {
  * o item — quem digitar a URL passaria direto sem esta checagem.
  */
 export function rotaLiberada(rota: string, papel?: string): boolean {
+  // O admin alcança qualquer tela funcional. Sai na frente para que
+  // uma restrição de papel adicionada depois não o barre sem querer.
+  if (papel === 'admin') return true
+
   const produtos = produtosDoUsuario(papel)
   for (const grupo of MENU) {
     for (const item of grupo.itens) {
