@@ -9,6 +9,8 @@ import {
 import { FunilEditor } from './funil-editor'
 import { SeletorPeriodo } from './seletor-periodo'
 import { SemEmpresa } from '@/components/vamo/sem-empresa'
+import { SemProduto } from '@/components/vamo/sem-produto'
+import { rotaLiberada } from '@/lib/vamo/menu'
 
 export default async function FunilPage({
   searchParams,
@@ -18,6 +20,10 @@ export default async function FunilPage({
   const params = await searchParams
   const sessao = await carregarSessao(params.org)
   if (!sessao) redirect('/login')
+
+  // O cadeado da barra lateral so esconde o item; a rota tambem
+  // precisa recusar quem chega por URL digitada.
+  if (!rotaLiberada('/dashboard/funil', sessao.role)) return <SemProduto tela="Funil Atual" />
 
   const org = sessao.organizacaoAtual
   if (!org) return <SemEmpresa papel={sessao.role} />

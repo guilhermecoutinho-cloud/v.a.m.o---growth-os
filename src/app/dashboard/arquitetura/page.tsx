@@ -10,6 +10,8 @@ import { ArquiteturaEditor } from './arquitetura-editor'
 import { JornadaEmpresa } from './jornada-empresa'
 import { JornadaVamo } from '@/components/vamo/jornada-vamo'
 import { SemEmpresa } from '@/components/vamo/sem-empresa'
+import { SemProduto } from '@/components/vamo/sem-produto'
+import { rotaLiberada } from '@/lib/vamo/menu'
 
 export default async function ArquiteturaPage({
   searchParams,
@@ -19,6 +21,10 @@ export default async function ArquiteturaPage({
   const params = await searchParams
   const sessao = await carregarSessao(params.org)
   if (!sessao) redirect('/login')
+
+  // O cadeado da barra lateral so esconde o item; a rota tambem
+  // precisa recusar quem chega por URL digitada.
+  if (!rotaLiberada('/dashboard/arquitetura', sessao.role)) return <SemProduto tela="Arquitetura de Receita" />
 
   const org = sessao.organizacaoAtual
   if (!org) return <SemEmpresa papel={sessao.role} />

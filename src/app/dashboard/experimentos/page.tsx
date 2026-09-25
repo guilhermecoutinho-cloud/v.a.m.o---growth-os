@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { carregarSessao, listarHipoteses } from '@/lib/vamo/dados'
 import { ListaExperimentos } from './lista-experimentos'
 import { SemEmpresa } from '@/components/vamo/sem-empresa'
+import { SemProduto } from '@/components/vamo/sem-produto'
+import { rotaLiberada } from '@/lib/vamo/menu'
 
 export type Experimento = {
   id: string
@@ -27,6 +29,10 @@ export default async function ExperimentosPage({
   const params = await searchParams
   const sessao = await carregarSessao(params.org)
   if (!sessao) redirect('/login')
+
+  // O cadeado da barra lateral so esconde o item; a rota tambem
+  // precisa recusar quem chega por URL digitada.
+  if (!rotaLiberada('/dashboard/experimentos', sessao.role)) return <SemProduto tela="Experimentos" />
 
   const org = sessao.organizacaoAtual
   if (!org) return <SemEmpresa papel={sessao.role} />

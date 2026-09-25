@@ -4,6 +4,8 @@ import { carregarSessao, buscarSnapshot, periodoAtual } from '@/lib/vamo/dados'
 import { TabelaCanais } from './tabela-canais'
 import { SeletorPeriodo } from '../funil/seletor-periodo'
 import { SemEmpresa } from '@/components/vamo/sem-empresa'
+import { SemProduto } from '@/components/vamo/sem-produto'
+import { rotaLiberada } from '@/lib/vamo/menu'
 
 export type LinhaCanal = {
   id: string
@@ -23,6 +25,10 @@ export default async function AquisicaoPage({
   const params = await searchParams
   const sessao = await carregarSessao(params.org)
   if (!sessao) redirect('/login')
+
+  // O cadeado da barra lateral so esconde o item; a rota tambem
+  // precisa recusar quem chega por URL digitada.
+  if (!rotaLiberada('/dashboard/aquisicao', sessao.role)) return <SemProduto tela="Canais de Aquisição" />
 
   const org = sessao.organizacaoAtual
   if (!org) return <SemEmpresa papel={sessao.role} />

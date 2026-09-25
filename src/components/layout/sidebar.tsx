@@ -2,33 +2,19 @@
 
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import {
-  LayoutDashboard,
-  Building2,
-  TrendingUp,
-  Target,
-  Lightbulb,
-  TestTube,
-  Map,
-  Megaphone,
-  Users,
-  Filter,
-  Briefcase,
-  LogOut,
-  User,
-} from 'lucide-react'
+import { TrendingUp, LogOut, User, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { logout } from '@/app/login/actions'
 import { SeletorEmpresa } from './seletor-empresa'
+import {
+  MENU,
+  SELO,
+  produtosDoUsuario,
+  estadoDoItem,
+  type ItemMenu,
+  type EstadoItem,
+} from '@/lib/vamo/menu'
 import type { Organizacao } from '@/lib/vamo/tipos'
-
-type ItemMenu = {
-  href?: string
-  rotulo: string
-  icone: typeof LayoutDashboard
-  /** Sem href: aparece esmaecido com o aviso de indisponível. */
-  breve?: boolean
-}
 
 const ROTULO_PAPEL: Record<string, string> = {
   admin: 'Administrador',
@@ -52,50 +38,9 @@ export function Sidebar({
   const params = useSearchParams()
   const org = params.get('org')
 
-  // Mantém a empresa escolhida ao navegar entre as telas.
   const comOrg = (href: string) => (org ? `${href}?org=${org}` : href)
-  const ativo = (href: string) => pathname === href
-
-  const grupos: Array<{ titulo: string; itens: ItemMenu[] }> = [
-    {
-      titulo: 'Visão Geral',
-      itens: [
-        { href: '/dashboard', rotulo: 'Dashboard', icone: LayoutDashboard },
-        { href: '/dashboard/jornada', rotulo: 'Minha Jornada', icone: Map },
-      ],
-    },
-    {
-      titulo: 'Minha Operação',
-      itens: [
-        { href: '/dashboard/funil', rotulo: 'Funil Atual', icone: Filter },
-        { href: '/dashboard/aquisicao', rotulo: 'Aquisição', icone: Megaphone },
-        { href: '/dashboard/arquitetura', rotulo: 'Arquitetura de Receita', icone: Building2 },
-        { rotulo: 'Vendas', icone: Target, breve: true },
-      ],
-    },
-    {
-      titulo: 'Growth',
-      itens: [
-        { href: '/dashboard/hipoteses', rotulo: 'Hipóteses', icone: Lightbulb },
-        { href: '/dashboard/experimentos', rotulo: 'Experimentos', icone: TestTube },
-        { rotulo: 'Plano de 90 dias', icone: Target, breve: true },
-      ],
-    },
-  ]
-
-  if (role === 'sales' || role === 'admin') {
-    grupos.push({
-      titulo: 'Comercial',
-      itens: [{ href: '/dashboard/leads', rotulo: 'Leads', icone: Briefcase }],
-    })
-  }
-
-  if (role === 'admin') {
-    grupos.push({
-      titulo: 'Administração',
-      itens: [{ href: '/dashboard/acessos', rotulo: 'Acessos', icone: Users }],
-    })
-  }
+  const produtos = produtosDoUsuario(role)
+  const grupos = MENU.filter((g) => !g.papeis || g.papeis.includes(role ?? ''))
 
   return (
     // sticky + h-screen: a barra acompanha a rolagem em vez de sumir.
@@ -120,56 +65,37 @@ export function Sidebar({
       )}
 
       {/* NAVEGAÇÃO */}
-      <nav className="custom-scrollbar relative z-10 flex-1 space-y-7 overflow-y-auto px-4 py-6">
+      <nav className="custom-scrollbar relative z-10 flex-1 space-y-6 overflow-y-auto px-4 py-5">
         {grupos.map((grupo) => (
           <div key={grupo.titulo}>
-            <h4 className="mb-3 px-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-              {grupo.titulo}
-            </h4>
-            <div className="space-y-1">
-              {grupo.itens.map((item) => {
-                const Icone = item.icone
+            <div className="mb-2.5 flex items-center gap-2 px-2">
+              <h4 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+                {grupo.titulo}
+              </h4>
+              {grupo.selo && (
+                <span
+                  className={cn(
+                    'rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider',
+                    grupo.selo === 'vamo' && 'bg-primary/15 text-primary',
+                    grupo.selo === 'estruturacao' && 'bg-amber-500/15 text-amber-400',
+                    grupo.selo === 'interno' && 'bg-white/10 text-muted-foreground'
+                  )}
+                >
+                  {SELO[grupo.selo]}
+                </span>
+              )}
+            </div>
 
-                if (item.breve || !item.href) {
-                  return (
-                    <div
-                      key={item.rotulo}
-                      title="Disponível em breve"
-                      aria-disabled="true"
-                      className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground/40"
-                    >
-                      <Icone className="h-4 w-4" />
-                      {item.rotulo}
-                      <span className="ml-auto text-[10px] uppercase tracking-wider">Breve</span>
-                    </div>
-                  )
-                }
-
-                const estaAtivo = ativo(item.href)
-                return (
-                  <Link
-                    key={item.rotulo}
-                    href={comOrg(item.href)}
-                    className={cn(
-                      'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
-                      estaAtivo
-                        ? 'bg-primary/10 text-primary shadow-[inset_0_0_0_1px_rgba(0,214,143,0.2)]'
-                        : 'text-muted-foreground hover:bg-white/5 hover:text-white'
-                    )}
-                  >
-                    {estaAtivo && (
-                      <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary shadow-[0_0_10px_rgba(0,214,143,0.8)]" />
-                    )}
-                    <Icone
-                      className={cn(
-                        'h-4 w-4 transition-colors',
-                        estaAtivo ? 'text-primary' : 'group-hover:text-white'
-                      )}
-                    />
-                    {item.rotulo}
-                  </Link>
-                )
-              })}
+            <div className="space-y-0.5">
+              {grupo.itens.map((item) => (
+                <LinhaMenu
+                  key={item.rotulo}
+                  item={item}
+                  estado={estadoDoItem(item, produtos)}
+                  ativo={item.href ? pathname === item.href : false}
+                  href={item.href ? comOrg(item.href) : undefined}
+                />
+              ))}
             </div>
           </div>
         ))}
@@ -196,5 +122,72 @@ export function Sidebar({
         </form>
       </div>
     </aside>
+  )
+}
+
+function LinhaMenu({
+  item,
+  estado,
+  ativo,
+  href,
+}: {
+  item: ItemMenu
+  estado: EstadoItem
+  ativo: boolean
+  href?: string
+}) {
+  const Icone = item.icone
+
+  // Sem o produto: cadeado à direita, não clicável.
+  if (estado === 'bloqueado') {
+    return (
+      <div
+        title="Disponível na Estruturação de Growth"
+        aria-disabled="true"
+        className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground/50"
+      >
+        <Icone className="h-4 w-4 shrink-0" />
+        <span className="min-w-0 flex-1 truncate">{item.rotulo}</span>
+        <Lock className="h-3 w-3 shrink-0 text-amber-500/70" />
+      </div>
+    )
+  }
+
+  // Tem o produto, mas a tela ainda não existe.
+  if (estado === 'breve' || !href) {
+    return (
+      <div
+        title="Disponível em breve"
+        aria-disabled="true"
+        className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground/40"
+      >
+        <Icone className="h-4 w-4 shrink-0" />
+        <span className="min-w-0 flex-1 truncate">{item.rotulo}</span>
+        <span className="shrink-0 text-[9px] uppercase tracking-wider">Breve</span>
+      </div>
+    )
+  }
+
+  return (
+    <Link
+      href={href}
+      className={cn(
+        'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
+        ativo
+          ? 'bg-primary/10 text-primary shadow-[inset_0_0_0_1px_rgba(0,214,143,0.2)]'
+          : 'text-muted-foreground hover:bg-white/5 hover:text-white'
+      )}
+    >
+      {ativo && (
+        <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary shadow-[0_0_10px_rgba(0,214,143,0.8)]" />
+      )}
+      <Icone
+        className={cn(
+          'h-4 w-4 shrink-0 transition-colors',
+          ativo ? 'text-primary' : 'group-hover:text-white'
+        )}
+      />
+      <span className="min-w-0 flex-1 truncate">{item.rotulo}</span>
+    </Link>
   )
 }

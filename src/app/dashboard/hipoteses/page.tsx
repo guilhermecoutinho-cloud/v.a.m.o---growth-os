@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { carregarSessao, listarHipoteses, buscarBiblioteca } from '@/lib/vamo/dados'
 import { ListaHipoteses } from './lista-hipoteses'
 import { SemEmpresa } from '@/components/vamo/sem-empresa'
+import { SemProduto } from '@/components/vamo/sem-produto'
+import { rotaLiberada } from '@/lib/vamo/menu'
 import { Lightbulb } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -14,6 +16,10 @@ export default async function HipotesesPage({
   const params = await searchParams
   const sessao = await carregarSessao(params.org)
   if (!sessao) redirect('/login')
+
+  // O cadeado da barra lateral so esconde o item; a rota tambem
+  // precisa recusar quem chega por URL digitada.
+  if (!rotaLiberada('/dashboard/hipoteses', sessao.role)) return <SemProduto tela="Hipóteses" />
 
   const org = sessao.organizacaoAtual
   if (!org) return <SemEmpresa papel={sessao.role} />
