@@ -1,3 +1,5 @@
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import {
   Card,
   CardContent,
@@ -5,204 +7,283 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { DollarSign, Target, TrendingDown, Activity, ArrowRight } from 'lucide-react'
-import { NovoDiagnostico } from '@/components/dashboard/novo-diagnostico'
+import { Button } from '@/components/ui/button'
+import {
+  DollarSign,
+  Target,
+  TrendingDown,
+  Activity,
+  ArrowRight,
+  Search,
+  PlusCircle,
+} from 'lucide-react'
+import { carregarSessao, carregarPainel } from '@/lib/vamo/dados'
+import { detectarPontos, tituloPonto } from '@/lib/vamo/investigacao'
+import {
+  receitaDe,
+  formatarMoeda,
+  formatarTaxa,
+  rotuloPeriodo,
+  rotuloPeriodoCurto,
+} from '@/lib/vamo/calculos'
+import { ALAVANCAS, NO_POR_ID } from '@/lib/vamo/modelo'
 import { GraficoReceitaLazy } from '@/components/dashboard/grafico-receita-lazy'
+import { SemEmpresa } from '@/components/vamo/sem-empresa'
+import { SemDados } from '@/components/vamo/sem-dados'
 
-const chartData = [
-  { name: 'Jan', receita: 120000 },
-  { name: 'Fev', receita: 180000 },
-  { name: 'Mar', receita: 220000 },
-  { name: 'Abr', receita: 260000 },
-  { name: 'Mai', receita: 310000 },
-  { name: 'Jun', receita: 350000 },
-]
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ org?: string }>
+}) {
+  const params = await searchParams
+  const sessao = await carregarSessao(params.org)
+  if (!sessao) redirect('/login')
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0,
-  }).format(value)
+  const org = sessao.organizacaoAtual
+  if (!org) return <SemEmpresa papel={sessao.role} />
 
-const METRICAS = [
-  {
-    titulo: 'RECEITA ATUAL',
-    valor: 350000,
-    nota: '+12% em relação ao mês passado',
-    icone: DollarSign,
-  },
-  { titulo: 'META', valor: 500000, nota: 'Objetivo anual', icone: Target },
-  {
-    titulo: 'GAP',
-    valor: 150000,
-    nota: 'Faltam para atingir a meta',
-    icone: TrendingDown,
-    alerta: true,
-  },
-]
+  const { snapshots, atual, anterior, meta, cenarios, pisos, hipoteses } =
+    await carregarPainel(org.id)
 
-const PASSOS = [
-  {
-    numero: 1,
-    titulo: 'Definir Hipótese Principal',
-    detalhe: 'Etapa de Conversão (MQL → Opps)',
-    ativo: true,
-  },
-  {
-    numero: 2,
-    titulo: 'Lançar Experimento',
-    detalhe: 'Depende da hipótese validada',
-    ativo: false,
-  },
-  {
-    numero: 3,
-    titulo: 'Ajustar Arquitetura',
-    detalhe: 'Revisar metas trimestrais',
-    ativo: false,
-  },
-]
+  const comOrg = (r: string) => (params.org ? `${r}?org=${params.org}` : r)
 
-export default function DashboardPage() {
-  const receitaAtual = 350000
-  const meta = 500000
-  const progresso = (receitaAtual / meta) * 100
+  if (!atual) return <SemDados href={comOrg('/dashboard/funil')} />
+
+  const receita = receitaDe(atual)
+  const metaMensal = meta?.target_revenue ?? null
+  const gap = metaMensal != null && receita != null ? Math.max(0, metaMensal - receita) : null
+  const progresso =
+    metaMensal != null && receita != null && metaMensal > 0 ? (receita / metaMensal) * 100 : null
+
+  const receitaAnterior = receitaDe(anterior)
+  const variacao =
+    receita != null && receitaAnterior != null && receitaAnterior > 0
+      ? ((receita - receitaAnterior) / receitaAnterior) * 100
+      : null
+
+  const cenarioMeta = cenarios.find((c) => c.name === 'meta') ?? null
+  const pontos = detectarPontos(atual, cenarioMeta, pisos)
+  const principal = pontos.find((p) => p.maiorImpacto) ?? pontos[0] ?? null
+
+  const aTestar = hipoteses.filter((h) => h.status === 'a_testar')
+
+  const dadosGrafico = snapshots
+    .map((s) => ({ name: rotuloPeriodoCurto(s.period), receita: receitaDe(s) ?? 0 }))
+    .filter((d) => d.receita > 0)
+
+  // Próximos passos seguem o estado real da máquina.
+  const passos: Array<{ titulo: string; detalhe: string; href: string }> = []
+  if (principal) {
+    passos.push({
+      titulo: `Investigar: ${tituloPonto(principal)}`,
+      detalhe:
+        principal.impacto != null && principal.impacto > 0
+          ? `Impacto potencial de ${formatarMoeda(principal.impacto)}/mês`
+          : 'Ponto sinalizado para investigação',
+      href: comOrg('/dashboard/funil'),
+    })
+  }
+  if (aTestar.length > 0) {
+    passos.push({
+      titulo: `Desenhar experimento para: ${aTestar[0].if_action.slice(0, 48)}…`,
+      detalhe: `${aTestar.length} hipótese(s) aguardando teste`,
+      href: comOrg('/dashboard/hipoteses'),
+    })
+  }
+  if (!metaMensal) {
+    passos.push({
+      titulo: 'Definir a meta mensal de receita',
+      detalhe: 'Sem meta, não dá para calcular o que falta',
+      href: comOrg('/dashboard/arquitetura'),
+    })
+  }
+  if (passos.length === 0) {
+    passos.push({
+      titulo: 'Registrar os números do próximo mês',
+      detalhe: 'Manter a série viva é o que permite comparar',
+      href: comOrg('/dashboard/funil'),
+    })
+  }
 
   return (
     <div className="space-y-8">
-      {/* HEADER DO DASHBOARD */}
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+      <header className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <h2 className="text-4xl font-extrabold tracking-tight text-white">
+          <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
             Sua Máquina de Crescimento
-          </h2>
-          <p className="mt-2 text-lg text-muted-foreground">
-            Antes de tentar crescer, precisamos entender como sua empresa cresce
-            hoje.
+          </h1>
+          <p className="mt-1.5 text-muted-foreground">
+            {org.name} · {rotuloPeriodo(atual.period)}
           </p>
         </div>
-        <NovoDiagnostico />
+        <Button
+          className="bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
+          render={<Link href={comOrg('/dashboard/funil')} />}
+        >
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Novo Diagnóstico
+        </Button>
+      </header>
+
+      {/* MÉTRICAS */}
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+        <Metrica
+          titulo="Receita do mês"
+          valor={formatarMoeda(receita)}
+          nota={
+            variacao != null
+              ? `${variacao >= 0 ? '+' : ''}${variacao.toFixed(1).replace('.', ',')}% vs. mês anterior`
+              : 'Registre o próximo mês para ver a evolução'
+          }
+          icone={DollarSign}
+        />
+        <Metrica
+          titulo="Meta mensal"
+          valor={formatarMoeda(metaMensal)}
+          nota={metaMensal ? 'Definida na Arquitetura' : 'Ainda não definida'}
+          icone={Target}
+        />
+        <Metrica
+          titulo="Gap"
+          valor={formatarMoeda(gap)}
+          nota={gap != null ? 'Falta para atingir a meta' : 'Depende da meta'}
+          icone={TrendingDown}
+          alerta
+        />
+        <Metrica
+          titulo="Progresso"
+          valor={progresso != null ? formatarTaxa(progresso) : '—'}
+          nota={progresso != null ? 'Receita sobre a meta mensal' : 'Depende da meta'}
+          icone={Activity}
+        />
       </div>
 
-      {/* MÉTRICAS PRINCIPAIS */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {METRICAS.map(({ titulo, valor, nota, icone: Icone, alerta }) => (
-          <Card
-            key={titulo}
-            className={`bg-gradient-to-br from-card to-card/50 shadow-xl transition-all duration-300 ${
-              alerta
-                ? 'border-destructive/20 hover:shadow-destructive/5'
-                : 'border-border/50 hover:shadow-primary/5'
-            }`}
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {titulo}
-              </CardTitle>
-              <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                  alerta ? 'bg-destructive/10' : 'bg-primary/10'
-                }`}
-              >
-                <Icone
-                  className={`h-4 w-4 ${alerta ? 'text-destructive' : 'text-primary'}`}
-                />
+      {/* PONTO DE MAIOR IMPACTO */}
+      {principal && (
+        <Card className="border-amber-500/30 bg-card">
+          <CardContent className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15">
+                <Search className="h-5 w-5 text-amber-400" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold tracking-tight text-white">
-                {formatCurrency(valor)}
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-widest text-amber-400">
+                  Ponto de maior impacto potencial
+                </div>
+                <h3 className="mt-0.5 text-lg font-bold text-white">{tituloPonto(principal)}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {principal.taxaAtual != null && (
+                    <>
+                      Sua taxa {formatarTaxa(principal.taxaAtual, 2)} · necessária{' '}
+                      {formatarTaxa(principal.taxaAlvo)} ·{' '}
+                    </>
+                  )}
+                  Alavanca {ALAVANCAS[NO_POR_ID[principal.no].alavanca].numero}{' '}
+                  {ALAVANCAS[NO_POR_ID[principal.no].alavanca].nome}
+                </p>
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">{nota}</p>
-            </CardContent>
-          </Card>
-        ))}
-
-        <Card className="border-border/50 bg-gradient-to-br from-card to-card/50 shadow-xl transition-all duration-300 hover:shadow-primary/5">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              PROGRESSO
-            </CardTitle>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-              <Activity className="h-4 w-4 text-primary" />
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold tracking-tight text-white">
-              {progresso.toFixed(1)}%
-            </div>
-            <Progress value={progresso} className="mt-3 h-2 overflow-hidden bg-muted">
-              <div
-                className="h-full bg-primary transition-all duration-1000 ease-out"
-                style={{ width: `${progresso}%` }}
-              />
-            </Progress>
+            <Button variant="outline" render={<Link href={comOrg('/dashboard/funil')} />}>
+              Investigar
+              <ArrowRight className="ml-1.5 h-4 w-4" />
+            </Button>
           </CardContent>
         </Card>
-      </div>
+      )}
 
-      {/* GRÁFICOS E PASSOS */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4 border-border/50 bg-gradient-to-br from-card to-card/30 shadow-xl">
+      {/* GRÁFICO E PASSOS */}
+      <div className="grid gap-6 lg:grid-cols-7">
+        <Card className="border-border/60 bg-card lg:col-span-4">
           <CardHeader>
-            <CardTitle className="text-xl text-white">
-              Evolução da Receita
-            </CardTitle>
+            <CardTitle className="text-xl text-white">Evolução da Receita</CardTitle>
             <CardDescription>
-              Crescimento acumulado ao longo dos últimos 6 meses
+              {dadosGrafico.length > 1
+                ? `Últimos ${dadosGrafico.length} meses registrados`
+                : 'Registre mais um mês para ver a curva'}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <GraficoReceitaLazy data={chartData} />
+            {dadosGrafico.length > 1 ? (
+              <GraficoReceitaLazy data={dadosGrafico} />
+            ) : (
+              <div className="flex h-[300px] items-center justify-center rounded-lg border border-dashed border-border/60 text-sm text-muted-foreground">
+                Um único mês não forma série. Registre o próximo.
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        <Card className="relative col-span-3 overflow-hidden border-border/50 bg-gradient-to-br from-card to-card/30 shadow-xl">
-          <div className="pointer-events-none absolute right-0 top-0 -mr-32 -mt-32 h-64 w-64 rounded-full bg-primary/5 blur-3xl"></div>
+        <Card className="border-border/60 bg-card lg:col-span-3">
           <CardHeader>
             <CardTitle className="text-xl text-white">Próximos Passos</CardTitle>
-            <CardDescription>
-              Ações recomendadas baseadas no seu funil
-            </CardDescription>
+            <CardDescription>Baseados no estado atual da sua máquina</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
-              {PASSOS.map(({ numero, titulo, detalhe, ativo }) => (
-                <div
-                  key={numero}
-                  className={`group flex items-start gap-4 ${
-                    ativo ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
-                  }`}
+            <div className="space-y-5">
+              {passos.map((p, i) => (
+                <Link
+                  key={p.titulo}
+                  href={p.href}
+                  className="group flex items-start gap-4 rounded-lg transition-colors"
                 >
-                  <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${
-                      ativo
-                        ? 'border-primary/20 bg-primary/10 text-primary transition-all group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground'
-                        : 'border-border bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    {numero}
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-sm text-primary transition-all group-hover:bg-primary group-hover:text-primary-foreground">
+                    {i + 1}
                   </div>
-                  <div className="flex-1 space-y-1">
-                    <p
-                      className={`text-base font-semibold leading-none text-white ${
-                        ativo ? 'transition-colors group-hover:text-primary' : ''
-                      }`}
-                    >
-                      {titulo}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-white transition-colors group-hover:text-primary">
+                      {p.titulo}
                     </p>
-                    <p className="text-sm text-muted-foreground">{detalhe}</p>
+                    <p className="text-xs text-muted-foreground">{p.detalhe}</p>
                   </div>
-                  {ativo && (
-                    <ArrowRight className="h-5 w-5 -translate-x-4 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
-                  )}
-                </div>
+                  <ArrowRight className="mt-1 h-4 w-4 shrink-0 -translate-x-2 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+                </Link>
               ))}
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
+  )
+}
+
+function Metrica({
+  titulo,
+  valor,
+  nota,
+  icone: Icone,
+  alerta,
+}: {
+  titulo: string
+  valor: string
+  nota: string
+  icone: typeof DollarSign
+  alerta?: boolean
+}) {
+  return (
+    <Card
+      className={
+        alerta
+          ? 'border-destructive/20 bg-card shadow-xl'
+          : 'border-border/60 bg-card shadow-xl'
+      }
+    >
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          {titulo}
+        </CardTitle>
+        <div
+          className={`flex h-8 w-8 items-center justify-center rounded-full ${
+            alerta ? 'bg-destructive/10' : 'bg-primary/10'
+          }`}
+        >
+          <Icone className={`h-4 w-4 ${alerta ? 'text-destructive' : 'text-primary'}`} />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold tracking-tight text-white">{valor}</div>
+        <p className="mt-1 text-xs text-muted-foreground">{nota}</p>
+      </CardContent>
+    </Card>
   )
 }
