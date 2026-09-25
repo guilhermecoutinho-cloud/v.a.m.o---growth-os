@@ -2,23 +2,23 @@
 
 import { useActionState, useState } from 'react'
 import { useFormStatus } from 'react-dom'
-import { criarAcesso, type ActionState } from './actions'
+import { convidarAcesso, type ActionState } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Check, Copy, RefreshCw } from 'lucide-react'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Check, MailCheck } from 'lucide-react'
+import type { Organizacao } from '@/lib/vamo/tipos'
 
-const estadoInicial: ActionState = { ok: false, message: '' }
+const INICIAL: ActionState = { ok: false, message: '' }
 
-/** Senha legivel para ditar por telefone: sem O/0, l/1, etc. */
-function gerarSenha() {
-  const alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
-  const valores = crypto.getRandomValues(new Uint32Array(12))
-  return Array.from(valores, (v) => alfabeto[v % alfabeto.length]).join('')
-}
-
-function BotaoSalvar() {
+function BotaoEnviar() {
   const { pending } = useFormStatus()
   return (
     <Button
@@ -26,148 +26,155 @@ function BotaoSalvar() {
       disabled={pending}
       className="bg-primary text-primary-foreground hover:bg-primary/90"
     >
-      {pending ? 'Criando...' : 'Criar acesso'}
+      {pending ? 'Enviando convite…' : 'Enviar convite'}
     </Button>
   )
 }
 
-export function CriarAcessoForm() {
-  const [estado, formAction] = useActionState(criarAcesso, estadoInicial)
-  const [senha, setSenha] = useState('')
-  const [copiado, setCopiado] = useState(false)
+export function CriarAcessoForm({
+  empresas,
+  mentores,
+}: {
+  empresas: Organizacao[]
+  mentores: Array<{ id: string; full_name: string | null; email: string }>
+}) {
+  const [estado, acao] = useActionState(convidarAcesso, INICIAL)
+  const [papel, setPapel] = useState('student')
+  const [criandoEmpresa, setCriandoEmpresa] = useState(empresas.length === 0)
 
-  const credenciais = estado.credentials
-
-  async function copiar() {
-    if (!credenciais) return
-    const texto =
-      `Seu acesso à plataforma V.A.M.O.\n\n` +
-      `E-mail: ${credenciais.email}\n` +
-      `Senha: ${credenciais.password}\n\n` +
-      `Acesse: ${window.location.origin}/login`
-    await navigator.clipboard.writeText(texto)
-    setCopiado(true)
-    setTimeout(() => setCopiado(false), 2000)
-  }
+  const precisaEmpresa = papel === 'student'
 
   return (
-    <Card className="border-border bg-card">
+    <Card className="border-border/60 bg-card">
       <CardHeader>
-        <CardTitle className="text-foreground">Liberar acesso</CardTitle>
+        <CardTitle className="text-foreground">Convidar para a plataforma</CardTitle>
         <CardDescription>
-          Defina o e-mail e a senha que você vai enviar ao comprador. A conta já
-          nasce liberada, sem e-mail de confirmação.
+          A pessoa recebe um e-mail e define a própria senha. Você não precisa criar nem
+          transportar senha.
         </CardDescription>
       </CardHeader>
 
       <CardContent>
-        <form action={formAction} className="space-y-4">
+        <form action={acao} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">E-mail do comprador</Label>
+              <Label htmlFor="email" className="text-foreground">
+                E-mail
+              </Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
                 required
                 placeholder="comprador@empresa.com.br"
-                className="bg-input text-foreground"
+                className="h-10 bg-input/60 text-foreground"
               />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="full_name" className="text-foreground">Nome completo</Label>
+              <Label htmlFor="full_name" className="text-foreground">
+                Nome completo
+              </Label>
               <Input
                 id="full_name"
                 name="full_name"
-                type="text"
                 placeholder="Maria Silva"
-                className="bg-input text-foreground"
+                className="h-10 bg-input/60 text-foreground"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-foreground">Senha</Label>
-            <div className="flex gap-2">
-              <Input
-                id="password"
-                name="password"
-                type="text"
-                required
-                minLength={8}
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                placeholder="mínimo 8 caracteres"
-                className="bg-input font-mono text-foreground"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setSenha(gerarSenha())}
-                title="Gerar senha"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Fica visível de propósito: é a senha que você vai enviar ao comprador.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="role" className="text-foreground">Perfil</Label>
+            <Label htmlFor="role" className="text-foreground">
+              Perfil
+            </Label>
             <select
               id="role"
               name="role"
-              defaultValue="student"
-              className="h-9 w-full rounded-md border border-input bg-input px-3 py-1 text-sm text-foreground"
+              value={papel}
+              onChange={(e) => setPapel(e.target.value)}
+              className="h-10 w-full rounded-lg border border-border/60 bg-input/60 px-3 text-sm text-foreground"
             >
-              <option value="student">Aluno</option>
-              <option value="mentor">Mentor</option>
-              <option value="sales">Comercial</option>
-              <option value="admin">Administrador</option>
+              <option value="student" className="bg-card">Aluno</option>
+              <option value="mentor" className="bg-card">Mentor</option>
+              <option value="sales" className="bg-card">Comercial</option>
+              <option value="admin" className="bg-card">Administrador</option>
             </select>
             <p className="text-xs text-muted-foreground">
-              Administrador consegue criar e revogar acessos. Use com parcimônia.
+              Administrador consegue convidar e revogar acessos. Use com parcimônia.
             </p>
           </div>
 
-          <BotaoSalvar />
+          {precisaEmpresa && (
+            <div className="space-y-3 rounded-xl border border-border/50 bg-white/[0.02] p-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-foreground">Empresa</Label>
+                {empresas.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setCriandoEmpresa((v) => !v)}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    {criandoEmpresa ? 'Escolher existente' : 'Criar nova'}
+                  </button>
+                )}
+              </div>
+
+              {criandoEmpresa ? (
+                <Input
+                  name="new_organization"
+                  required
+                  placeholder="Nome da empresa"
+                  className="h-10 bg-input/60 text-foreground"
+                />
+              ) : (
+                <select
+                  name="organization_id"
+                  required
+                  className="h-10 w-full rounded-lg border border-border/60 bg-input/60 px-3 text-sm text-foreground"
+                >
+                  <option value="" className="bg-card">Selecione…</option>
+                  {empresas.map((e) => (
+                    <option key={e.id} value={e.id} className="bg-card">
+                      {e.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {mentores.length > 0 && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="mentor_id" className="text-sm text-muted-foreground">
+                    Mentor responsável (opcional)
+                  </Label>
+                  <select
+                    id="mentor_id"
+                    name="mentor_id"
+                    className="h-10 w-full rounded-lg border border-border/60 bg-input/60 px-3 text-sm text-foreground"
+                  >
+                    <option value="" className="bg-card">Sem mentor</option>
+                    {mentores.map((m) => (
+                      <option key={m.id} value={m.id} className="bg-card">
+                        {m.full_name ?? m.email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
+
+          <BotaoEnviar />
         </form>
 
-        {estado.message && !estado.ok && (
-          <p className="mt-4 text-sm text-destructive">{estado.message}</p>
-        )}
-
-        {estado.ok && credenciais && (
-          <div className="mt-4 rounded-lg border border-primary/30 bg-primary/5 p-4">
-            <p className="flex items-center gap-2 text-sm font-medium text-primary">
-              <Check className="h-4 w-4" />
-              {estado.message}
-            </p>
-            <div className="mt-3 space-y-1 font-mono text-sm text-foreground">
-              <div>E-mail: {credenciais.email}</div>
-              <div>Senha: {credenciais.password}</div>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={copiar}
-              className="mt-3"
-            >
-              {copiado ? (
-                <><Check className="mr-2 h-3 w-3" /> Copiado</>
-              ) : (
-                <><Copy className="mr-2 h-3 w-3" /> Copiar mensagem pronta</>
-              )}
-            </Button>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Guarde ou envie agora: a senha não fica recuperável depois que você
-              sair desta tela.
-            </p>
-          </div>
+        {estado.message && (
+          <p
+            className={`mt-4 flex items-center gap-2 text-sm ${
+              estado.ok ? 'text-primary' : 'text-destructive'
+            }`}
+          >
+            {estado.ok ? <MailCheck className="h-4 w-4" /> : null}
+            {estado.message}
+          </p>
         )}
       </CardContent>
     </Card>
